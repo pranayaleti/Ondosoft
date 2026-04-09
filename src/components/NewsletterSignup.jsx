@@ -1,15 +1,41 @@
 import { memo, useState } from "react";
-import { Send } from "lucide-react";
+import { Send, AlertCircle, CheckCircle2 } from "lucide-react";
+
+const API_BASE = import.meta.env.VITE_API_URL || "";
 
 const NewsletterSignup = () => {
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState("idle"); // idle | loading | success | already | error
+  const [message, setMessage] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email.trim()) {
-      setSubmitted(true);
-      setEmail("");
+    if (!email.trim()) return;
+
+    setStatus("loading");
+    try {
+      const res = await fetch(`${API_BASE}/api/newsletter/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        if (data.status === "already_subscribed") {
+          setStatus("already");
+          setMessage(data.message || "You're already subscribed!");
+        } else {
+          setStatus("success");
+          setMessage(data.message || "You're in! Check your inbox.");
+        }
+        setEmail("");
+      } else {
+        throw new Error(data.detail || "Something went wrong");
+      }
+    } catch (err) {
+      setStatus("error");
+      setMessage(err.message || "Failed to subscribe. Please try again.");
     }
   };
 
@@ -27,37 +53,67 @@ const NewsletterSignup = () => {
             Join 2,000+ founders and CTOs who receive our bi-weekly digest on product engineering, scaling, and AI integration.
           </p>
 
-          {submitted ? (
+          {status === "success" ? (
             <div
               data-testid="newsletter-success"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 font-medium"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 font-medium animate-scale-in"
             >
-              <Send className="w-4 h-4" />
-              You're in! Check your inbox.
+              <CheckCircle2 className="w-5 h-5" />
+              {message}
+            </div>
+          ) : status === "already" ? (
+            <div
+              data-testid="newsletter-already"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500/10 border border-blue-500/30 rounded-full text-blue-400 font-medium animate-scale-in"
+            >
+              <CheckCircle2 className="w-5 h-5" />
+              {message}
             </div>
           ) : (
-            <form
-              onSubmit={handleSubmit}
-              data-testid="newsletter-form"
-              className="relative z-10 flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto"
-            >
-              <input
-                data-testid="newsletter-email-input"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
-                required
-                className="flex-1 w-full px-5 py-3.5 bg-black/40 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors"
-              />
-              <button
-                data-testid="newsletter-submit-btn"
-                type="submit"
-                className="w-full sm:w-auto px-6 py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+            <>
+              <form
+                onSubmit={handleSubmit}
+                data-testid="newsletter-form"
+                className="relative z-10 flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto"
               >
-                Subscribe <Send className="w-4 h-4" />
-              </button>
-            </form>
+                <input
+                  data-testid="newsletter-email-input"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  required
+                  disabled={status === "loading"}
+                  className="flex-1 w-full px-5 py-3.5 bg-black/40 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors disabled:opacity-50"
+                />
+                <button
+                  data-testid="newsletter-submit-btn"
+                  type="submit"
+                  disabled={status === "loading"}
+                  className="w-full sm:w-auto px-6 py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {status === "loading" ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Subscribing...
+                    </>
+                  ) : (
+                    <>
+                      Subscribe <Send className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+              {status === "error" && (
+                <div
+                  data-testid="newsletter-error"
+                  className="mt-4 inline-flex items-center gap-2 text-red-400 text-sm"
+                >
+                  <AlertCircle className="w-4 h-4" />
+                  {message}
+                </div>
+              )}
+            </>
           )}
 
           <p className="text-xs text-gray-600 mt-4 relative z-10">

@@ -19,6 +19,7 @@ const HomepageFAQ = lazy(() => import("../components/HomepageFAQ"));
 const ROICalculator = lazy(() => import("../components/ROICalculator"));
 const SocialProofBadges = lazy(() => import("../components/SocialProofBadges"));
 const NewsletterSignup = lazy(() => import("../components/NewsletterSignup"));
+const VideoExplainer = lazy(() => import("../components/VideoExplainer"));
 import { companyInfo, getPostalAddressSchema, getContactPointSchema, getCanonicalUrl } from "../constants/companyInfo";
 import { getAreaServedSchema } from "../utils/unifiedData.js";
 import { 
@@ -120,6 +121,11 @@ const HomePage = () => {
         {/* Client / Tech Logos - trust bar */}
         <Suspense fallback={<div className="h-20" />}>
           <ClientLogos />
+        </Suspense>
+
+        {/* Video Explainer - "From Idea to Launch" */}
+        <Suspense fallback={<div className="h-32" />}>
+          <VideoExplainer />
         </Suspense>
 
         {/* Value Proposition Section */}

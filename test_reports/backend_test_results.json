@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-04-09T05:03:53.529571",
+  "total_tests": 6,
+  "passed_tests": 6,
+  "success_rate": "100.0%",
+  "results": [
+    {
+      "test": "Health Check",
+      "success": true,
+      "details": "Status: 200, Response: {'status': 'ok'}"
+    },
+    {
+      "test": "Newsletter Subscribe (New Email)",
+      "success": true,
+      "details": "Status: 200, Response: {'status': 'subscribed', 'message': \"You're in! Check your inbox.\"}"
+    },
+    {
+      "test": "Newsletter Subscribe (Duplicate Email)",
+      "success": true,
+      "details": "Status: 200, Response: {'status': 'already_subscribed', 'message': \"You're already subscribed!\"}"
+    },
+    {
+      "test": "Newsletter Subscribe (Invalid Email)",
+      "success": true,
+      "details": "Status: 422, Response: {\"detail\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"email\"],\"msg\":\"value is not a valid email address: An email address must have an @-sign.\",\"input\":\"invalid-email\",\"ctx\":{\"reason\":\"An email address must have an @-sign.\"}}]}"
+    },
+    {
+      "test": "Get Newsletter Subscribers",
+      "success": true,
+      "details": "Status: 200, Total subscribers: 3"
+    },
+    {
+      "test": "Contact Form Submit",
+      "success": true,
+      "details": "Status: 200, Response: {'status': 'success', 'message': \"Thank you! We'll get back to you within 24 hours.\"}"
+    }
+  ]
+}
