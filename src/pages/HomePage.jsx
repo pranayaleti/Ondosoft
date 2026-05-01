@@ -9,6 +9,17 @@ const CalendlyModal = lazy(() => import("../components/CalendlyModal"));
 const Footer = lazy(() => import("../components/Footer"));
 const HeroCTA = lazy(() => import("../components/HeroCTA"));
 const TrustBadges = lazy(() => import("../components/TrustBadges"));
+
+// NEW: Competitor-inspired enhancement components
+const ClientLogos = lazy(() => import("../components/ClientLogos"));
+const ProcessTimeline = lazy(() => import("../components/ProcessTimeline"));
+const ComparisonTable = lazy(() => import("../components/ComparisonTable"));
+const TechStack = lazy(() => import("../components/TechStack"));
+const HomepageFAQ = lazy(() => import("../components/HomepageFAQ"));
+const ROICalculator = lazy(() => import("../components/ROICalculator"));
+const SocialProofBadges = lazy(() => import("../components/SocialProofBadges"));
+const NewsletterSignup = lazy(() => import("../components/NewsletterSignup"));
+const VideoExplainer = lazy(() => import("../components/VideoExplainer"));
 import { companyInfo, getPostalAddressSchema, getContactPointSchema, getCanonicalUrl } from "../constants/companyInfo";
 import { getAreaServedSchema } from "../utils/unifiedData.js";
 import { 
@@ -101,6 +112,21 @@ const HomePage = () => {
         <div id="top" className="mx-auto pt-20">
           <HeroSection onOpenSchedule={() => setIsModalOpen(true)} />
         </div>
+
+        {/* Social Proof Badges - Rating platforms */}
+        <Suspense fallback={<div className="h-32" />}>
+          <SocialProofBadges />
+        </Suspense>
+
+        {/* Client / Tech Logos - trust bar */}
+        <Suspense fallback={<div className="h-20" />}>
+          <ClientLogos />
+        </Suspense>
+
+        {/* Video Explainer - "From Idea to Launch" */}
+        <Suspense fallback={<div className="h-32" />}>
+          <VideoExplainer />
+        </Suspense>
 
         {/* Value Proposition Section */}
         <section className="py-20">
@@ -266,6 +292,11 @@ const HomePage = () => {
           </div>
         </section>
 
+        {/* Process Timeline - How We Deliver */}
+        <Suspense fallback={<div className="h-32" />}>
+          <ProcessTimeline />
+        </Suspense>
+
         {/* Stats Section */}
         <section className="py-20 border-t border-b border-gray-700/50">
           <div className="max-w-7xl mx-auto px-4">
@@ -299,6 +330,26 @@ const HomePage = () => {
           </div>
         </section>
 
+        {/* Comparison Table - Ondosoft vs Alternatives */}
+        <Suspense fallback={<div className="h-32" />}>
+          <ComparisonTable />
+        </Suspense>
+
+        {/* Technology Stack Showcase */}
+        <Suspense fallback={<div className="h-32" />}>
+          <TechStack />
+        </Suspense>
+
+        {/* ROI Calculator */}
+        <Suspense fallback={<div className="h-32" />}>
+          <ROICalculator />
+        </Suspense>
+
+        {/* Homepage FAQ */}
+        <Suspense fallback={<div className="h-32" />}>
+          <HomepageFAQ />
+        </Suspense>
+
         {/* Hero CTA Section - Lazy loaded for better initial performance */}
         <Suspense fallback={<div className="h-32" />}>
           <HeroCTA onOpenSchedule={() => setIsModalOpen(true)} />
@@ -307,6 +358,11 @@ const HomePage = () => {
         {/* Trust Badges & Success Story - Lazy loaded for better initial performance */}
         <Suspense fallback={<div className="h-32" />}>
           <TrustBadges />
+        </Suspense>
+
+        {/* Newsletter Signup */}
+        <Suspense fallback={<div className="h-32" />}>
+          <NewsletterSignup />
         </Suspense>
 
         <Suspense fallback={<div className="h-32" />}>
