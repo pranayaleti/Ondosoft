@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { adminAPI } from '../../utils/auth.js';
+import { isAbortError } from '../../hooks/useAbortableEffect';
 import { 
   Users, 
   Megaphone, 
@@ -31,22 +32,23 @@ const AdminDashboard = () => {
   const fetchInitiatedRef = useRef(false);
 
   useEffect(() => {
-    // Only fetch once, even if component re-renders (handles React StrictMode)
+    const controller = new AbortController();
     if (!fetchInitiatedRef.current) {
       fetchInitiatedRef.current = true;
-      fetchDashboardData();
+      fetchDashboardData(controller.signal);
     }
+    return () => controller.abort();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (signal) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await adminAPI.getDashboard();
+      const data = await adminAPI.getDashboard({ signal });
       setDashboardData(data);
     } catch (err) {
+      if (isAbortError(err)) return;
       setError(err.message);
-      // Reset flag on error to allow retry
       fetchInitiatedRef.current = false;
     } finally {
       setLoading(false);

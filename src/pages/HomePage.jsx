@@ -1,7 +1,7 @@
 import { useState, useMemo, memo, lazy, Suspense } from "react";
+import { Link } from "react-router-dom";
 import SEOHead from "../components/SEOHead";
 import HeroSection from "../components/HeroSection";
-import HiddenSEOSection from "../components/HiddenSEOSection";
 import FancyHeading from "../components/FancyHeading";
 
 // Lazy load heavy components - defer non-critical sections for faster LCP
@@ -73,11 +73,6 @@ const HomePage = () => {
         "description": "Full stack software development, AI products, and platform engineering for modern teams.",
         "publisher": {
           "@id": `${companyInfo.urls.website}/#organization`
-        },
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": `${companyInfo.urls.website}/search?q={search_term_string}`,
-          "query-input": "required name=search_term_string"
         }
       },
       {
@@ -255,9 +250,9 @@ const HomePage = () => {
                     API Development & Integration
                   </li>
                 </ul>
-                <a href="/contact" className="inline-flex items-center text-orange-400 hover:text-orange-300 font-semibold group-hover:translate-x-1 transition-transform">
+                <Link to="/contact" className="inline-flex items-center text-orange-400 hover:text-orange-300 font-semibold group-hover:translate-x-1 transition-transform">
                   Start Your SaaS <ArrowRight className="h-4 w-4 ml-2" />
-                </a>
+                </Link>
               </div>
               
               <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 p-8 rounded-xl border border-orange-500/20 hover:border-orange-500/40 transition-all duration-300 group">
@@ -284,9 +279,9 @@ const HomePage = () => {
                     App Store Optimization
                   </li>
                 </ul>
-                <a href="/contact" className="inline-flex items-center text-orange-400 hover:text-orange-300 font-semibold group-hover:translate-x-1 transition-transform">
+                <Link to="/contact" className="inline-flex items-center text-orange-400 hover:text-orange-300 font-semibold group-hover:translate-x-1 transition-transform">
                   Build Your App <ArrowRight className="h-4 w-4 ml-2" />
-                </a>
+                </Link>
               </div>
             </div>
           </div>
@@ -368,9 +363,6 @@ const HomePage = () => {
         <Suspense fallback={<div className="h-32" />}>
           <Footer />
         </Suspense>
-        
-        {/* Hidden SEO Section - Service Areas for Search Engines */}
-        <HiddenSEOSection />
       </div>
       
       {/* Schedule meeting modal */}

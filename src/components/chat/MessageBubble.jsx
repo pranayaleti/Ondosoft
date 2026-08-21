@@ -80,21 +80,13 @@ const MessageBubble = memo(({
           </button>
         )}
         <div className="text-sm whitespace-pre-wrap">
-          {/* #region agent log */}
           {(() => {
             try {
-              // #region agent log
-              fetch('http://127.0.0.1:7243/ingest/4ed8e0b4-0b62-40c2-b89e-683e2b0cadf2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MessageBubble.jsx:83',message:'Rendering message content',data:{messageId:message?.id,contentType:typeof message?.content,contentLength:message?.content?.length,hasContent:!!message?.content},timestamp:Date.now(),runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-              // #endregion
               return renderMarkdown(message?.content || '');
-            } catch (error) {
-              // #region agent log
-              fetch('http://127.0.0.1:7243/ingest/4ed8e0b4-0b62-40c2-b89e-683e2b0cadf2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MessageBubble.jsx:87',message:'Error rendering markdown',data:{error:error?.message,errorStack:error?.stack,messageId:message?.id},timestamp:Date.now(),runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-              // #endregion
+            } catch {
               return message?.content || '';
             }
           })()}
-          {/* #endregion */}
         </div>
         <p 
           className="text-xs mt-1 opacity-70 cursor-help"

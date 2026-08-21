@@ -33,7 +33,7 @@ jobs:
       - name: Build project
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
-        run: npm run build && cp dist/index.html dist/404.html
+        run: npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

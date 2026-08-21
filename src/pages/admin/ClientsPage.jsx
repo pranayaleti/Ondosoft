@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { companyInfo } from '../../constants/companyInfo';
 import { adminAPI } from '../../utils/auth.js';
+import { useAbortableEffect, isAbortError } from '../../hooks/useAbortableEffect';
 import { formatPhoneNumber } from '../../utils/security.js';
 import { 
   Users, Loader, Search, Filter, Calendar, Mail, Phone, Building2, 
@@ -44,21 +45,22 @@ const ClientsPage = () => {
   });
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    fetchUsers();
+  useAbortableEffect((signal) => {
+    fetchUsers(signal);
   }, []);
 
   useEffect(() => {
     filterUsers();
   }, [searchTerm, filterRole, filterCompanySize, filterIndustry, filterSignupSource, filterAccountStatus, users]);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (signal) => {
     try {
       setLoading(true);
-      const data = await adminAPI.getUsers();
+      const data = await adminAPI.getUsers({ signal });
       setUsers(data.users);
       setFilteredUsers(data.users);
     } catch (err) {
+      if (isAbortError(err)) return;
       setError(err.message);
     } finally {
       setLoading(false);

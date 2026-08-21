@@ -296,9 +296,21 @@ const BlogPage = () => {
                   <Search className="h-16 w-16 mx-auto opacity-50" />
                 </div>
                 <h3 className="text-2xl font-semibold text-white mb-3">No articles found</h3>
-                <p className="text-gray-400 text-base">
+                <p className="text-gray-400 text-base mb-6">
                   Try adjusting your search terms or category filter.
                 </p>
+                {(searchTerm || selectedCategory !== 'all') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setSelectedCategory('all');
+                    }}
+                    className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                  >
+                    Clear filters
+                  </button>
+                )}
               </div>
             )}
           </div>

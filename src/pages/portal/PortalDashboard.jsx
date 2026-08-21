@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { portalAPI } from '../../utils/auth.js';
+import { isAbortError } from '../../hooks/useAbortableEffect';
 import { 
   CreditCard, 
   Megaphone, 
@@ -22,42 +23,54 @@ const PortalDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isMountedRef = useRef(true);
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
-    fetchDashboardData();
+    isMountedRef.current = true;
+    const controller = new AbortController();
+    fetchDashboardData(controller.signal);
+    return () => {
+      isMountedRef.current = false;
+      controller.abort();
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Debug: Log when component mounts and state changes
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      console.log('PortalDashboard mounted, loading:', loading, 'error:', error);
-    }
-  }, [loading, error]);
-
-  const fetchDashboardData = async () => {
-    try {
+  const fetchDashboardData = async (abortSignal) => {
+    if (isMountedRef.current) {
       setLoading(true);
       setError(null);
-      
-      // Add timeout to prevent infinite loading (reduced from 30s to 15s)
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout. Please check your connection and try again.')), 15000);
-      });
-      
-      const dataPromise = portalAPI.getDashboard();
-      const data = await Promise.race([dataPromise, timeoutPromise]);
-      
+    }
+
+    // A timeout guard that resolves the race with an error, but also gets
+    // cleared as soon as the real request settles so a stale reject never
+    // becomes an unhandled rejection or triggers setState after unmount.
+    let timeoutReject;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutReject = reject;
+      timeoutRef.current = setTimeout(() => {
+        reject(new Error('Request timeout. Please check your connection and try again.'));
+      }, 15000);
+    });
+
+    try {
+      const data = await Promise.race([portalAPI.getDashboard({ signal: abortSignal }), timeoutPromise]);
+      if (!isMountedRef.current) return;
       setDashboardData(data);
     } catch (err) {
+      if (!isMountedRef.current || isAbortError(err)) return;
       console.error('Dashboard fetch error:', err);
-      const errorMessage = err.message || 'Failed to load dashboard. Please try refreshing the page.';
-      setError(errorMessage);
-      // Log more details in development
-      if (import.meta.env.DEV) {
-        console.error('Full error details:', err);
-      }
+      setError(err.message || 'Failed to load dashboard. Please try refreshing the page.');
     } finally {
-      setLoading(false);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      // Swap in a no-op resolver so the pending promise cannot later reject.
+      if (typeof timeoutReject === 'function') timeoutReject = () => {};
+      if (isMountedRef.current) setLoading(false);
     }
   };
 

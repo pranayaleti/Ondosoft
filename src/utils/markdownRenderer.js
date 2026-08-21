@@ -6,17 +6,8 @@ import React from 'react';
  */
 
 export const renderMarkdown = (text) => {
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/4ed8e0b4-0b62-40c2-b89e-683e2b0cadf2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'markdownRenderer.js:8',message:'renderMarkdown called',data:{textType:typeof text,textLength:text?.length,textValue:text?.substring(0,50)},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
-  
   if (!text) return '';
 
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/4ed8e0b4-0b62-40c2-b89e-683e2b0cadf2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'markdownRenderer.js:11',message:'Processing text',data:{textLength:text.length},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
-
-  // Split by lines to handle line breaks
   const lines = text.split('\n');
   const elements = [];
 
@@ -26,13 +17,8 @@ export const renderMarkdown = (text) => {
       return;
     }
 
-    // Process inline markdown
     const processed = processInlineMarkdown(line);
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/4ed8e0b4-0b62-40c2-b89e-683e2b0cadf2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'markdownRenderer.js:25',message:'Processed line',data:{lineIndex:index,processedType:Array.isArray(processed)?'array':typeof processed,processedLength:Array.isArray(processed)?processed.length:null},timestamp:Date.now(),runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
-    
+
     elements.push(React.createElement(
       'span',
       { key: `line-${index}` },
@@ -150,14 +136,9 @@ const processInlineMarkdown = (text) => {
     currentIndex = match.end;
   });
 
-  // Add remaining text
   if (currentIndex < text.length) {
     parts.push(text.substring(currentIndex));
   }
-
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/4ed8e0b4-0b62-40c2-b89e-683e2b0cadf2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'markdownRenderer.js:135',message:'processInlineMarkdown returning',data:{partsLength:parts.length,returnType:parts.length>0?'array':'string',textLength:text.length},timestamp:Date.now(),runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-  // #endregion
 
   // Always return an array for consistency - React can render arrays
   return parts.length > 0 ? parts : [text];

@@ -9,8 +9,7 @@ const NavigationLoader = () => {
   useEffect(() => {
     setIsNavigating(true);
     setLoadingProgress(0);
-    
-    // Simulate loading progress
+
     const progressInterval = setInterval(() => {
       setLoadingProgress(prev => {
         if (prev >= 90) {
@@ -21,10 +20,10 @@ const NavigationLoader = () => {
       });
     }, 50);
 
-    // Complete loading after a short delay
+    let hideTimer = null;
     const completeTimer = setTimeout(() => {
       setLoadingProgress(100);
-      setTimeout(() => {
+      hideTimer = setTimeout(() => {
         setIsNavigating(false);
         setLoadingProgress(0);
       }, 200);
@@ -33,6 +32,7 @@ const NavigationLoader = () => {
     return () => {
       clearInterval(progressInterval);
       clearTimeout(completeTimer);
+      if (hideTimer) clearTimeout(hideTimer);
     };
   }, [location.pathname]);
 

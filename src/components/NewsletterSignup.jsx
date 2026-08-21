@@ -1,25 +1,41 @@
-import { memo, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Send, AlertCircle, CheckCircle2 } from "lucide-react";
-
-const API_BASE = import.meta.env.VITE_API_URL || "";
+import { API_URL } from "../utils/apiConfig.js";
 
 const NewsletterSignup = () => {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("idle"); // idle | loading | success | already | error
   const [message, setMessage] = useState("");
+  const abortRef = useRef(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (abortRef.current) abortRef.current.abort();
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    const trimmed = email.trim();
+    if (!trimmed) return;
 
     setStatus("loading");
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
-      const res = await fetch(`${API_BASE}/api/newsletter/subscribe`, {
+      const res = await fetch(`${API_URL}/newsletter/subscribe`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: trimmed }),
+        signal: controller.signal,
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+
+      if (!isMountedRef.current) return;
 
       if (res.ok) {
         if (data.status === "already_subscribed") {
@@ -31,11 +47,15 @@ const NewsletterSignup = () => {
         }
         setEmail("");
       } else {
-        throw new Error(data.detail || "Something went wrong");
+        throw new Error(data.error || data.detail || "Something went wrong");
       }
     } catch (err) {
+      if (err.name === "AbortError") return;
+      if (!isMountedRef.current) return;
       setStatus("error");
       setMessage(err.message || "Failed to subscribe. Please try again.");
+    } finally {
+      abortRef.current = null;
     }
   };
 
@@ -43,7 +63,6 @@ const NewsletterSignup = () => {
     <section data-testid="newsletter-section" className="py-20">
       <div className="max-w-4xl mx-auto px-4">
         <div className="relative bg-gradient-to-br from-orange-500/10 via-orange-600/5 to-transparent border border-orange-500/20 rounded-3xl p-10 md:p-16 text-center overflow-hidden">
-          {/* Glow */}
           <div className="absolute -top-20 -right-20 w-60 h-60 bg-orange-500/10 rounded-full blur-[100px] pointer-events-none" />
 
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 relative z-10">
@@ -57,6 +76,8 @@ const NewsletterSignup = () => {
             <div
               data-testid="newsletter-success"
               className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 font-medium animate-scale-in"
+              role="status"
+              aria-live="polite"
             >
               <CheckCircle2 className="w-5 h-5" />
               {message}
@@ -65,6 +86,8 @@ const NewsletterSignup = () => {
             <div
               data-testid="newsletter-already"
               className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500/10 border border-blue-500/30 rounded-full text-blue-400 font-medium animate-scale-in"
+              role="status"
+              aria-live="polite"
             >
               <CheckCircle2 className="w-5 h-5" />
               {message}
@@ -76,9 +99,14 @@ const NewsletterSignup = () => {
                 data-testid="newsletter-form"
                 className="relative z-10 flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto"
               >
+                <label htmlFor="newsletter-email" className="sr-only">
+                  Email address
+                </label>
                 <input
+                  id="newsletter-email"
                   data-testid="newsletter-email-input"
                   type="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
@@ -108,6 +136,7 @@ const NewsletterSignup = () => {
                 <div
                   data-testid="newsletter-error"
                   className="mt-4 inline-flex items-center gap-2 text-red-400 text-sm"
+                  role="alert"
                 >
                   <AlertCircle className="w-4 h-4" />
                   {message}

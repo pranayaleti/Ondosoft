@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useAbortableEffect, isAbortError } from '../../hooks/useAbortableEffect';
 import { Bell, MessageSquare, FileText, AlertCircle, CheckCircle2, Clock, Trash2, CheckCheck, X } from 'lucide-react';
 import { portalAPI } from '../../utils/auth.js';
 import { useAuth } from '../../contexts/AuthContext';
@@ -15,18 +16,17 @@ const NotificationsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchNotifications();
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
+  useAbortableEffect((signal) => {
+    fetchNotifications(signal);
+    const interval = setInterval(() => fetchNotifications(signal), 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (signal) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await portalAPI.getNotifications();
+      const data = await portalAPI.getNotifications({ signal });
       // Filter out dismissed notifications and those with future remind_at dates
       const now = new Date();
       const filtered = (data.notifications || []).filter(n => {
@@ -39,6 +39,7 @@ const NotificationsPage = () => {
       });
       setNotifications(filtered);
     } catch (err) {
+      if (isAbortError(err)) return;
       console.error('Failed to fetch notifications:', err);
       setError('Failed to load notifications. Please try again.');
     } finally {

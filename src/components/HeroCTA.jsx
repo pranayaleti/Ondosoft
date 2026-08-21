@@ -1,4 +1,5 @@
 import { ArrowRight, Calculator, MessageCircle, Star, CheckCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const HeroCTA = ({ onOpenSchedule }) => {
   return (
@@ -28,26 +29,26 @@ const HeroCTA = ({ onOpenSchedule }) => {
               <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </button>
           ) : (
-            <a
-              href="/contact"
+            <Link
+              to="/contact"
               className="group bg-white text-orange-600 px-8 py-4 min-h-[48px] rounded-lg text-lg font-semibold hover:bg-orange-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center"
               aria-label="Schedule a meeting"
             >
               <MessageCircle className="h-5 w-5 mr-2" />
               Schedule a meeting
               <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
-            </a>
+            </Link>
           )}
-          
-          <a
-            href="/pricing"
+
+          <Link
+            to="/pricing"
             className="group border-2 border-white text-white px-8 py-4 min-h-[48px] rounded-lg text-lg font-semibold hover:bg-white hover:text-orange-600 transition-all duration-300 flex items-center justify-center"
             aria-label="View pricing and estimate project cost"
           >
             <Calculator className="h-5 w-5 mr-2" />
             View Pricing
             <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
-          </a>
+          </Link>
         </div>
         
         {/* Trust Indicators */}

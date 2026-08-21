@@ -71,9 +71,10 @@ const DemoPage = () => {
   return (
     <>
       <SEOHead
-        title="Sample Dashboard | OndoSoft Client Portal Demo"
-        description="View a sample of the OndoSoft client dashboard. See how clients manage campaigns, assets, invoices, and subscriptions."
-        keywords="dashboard demo, client portal sample, OndoSoft dashboard"
+        title="Sample Dashboard | Ondosoft Client Portal Demo"
+        description="View a sample of the Ondosoft client dashboard. See how clients manage campaigns, assets, invoices, and subscriptions."
+        keywords="dashboard demo, client portal sample, Ondosoft dashboard"
+        noIndex={true}
       />
       <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
         {/* Demo banner */}

@@ -35,21 +35,39 @@ const AIChatModal = ({ isOpen, onClose, position = 'center' }) => {
   const modalRef = useRef(null);
   const resizeHandleRef = useRef(null);
   const isInitializingRef = useRef(false);
+  const fetchAbortRef = useRef(null);
+
+  const chatFetch = (url, options = {}) =>
+    fetch(url, {
+      ...options,
+      credentials: options.credentials ?? 'include',
+      signal: options.signal ?? fetchAbortRef.current?.signal,
+    });
 
   const AI_NAME = 'Arjun';
   const AI_TITLE = 'AI Assistant';
 
-  // End conversation when modal closes
+  const conversationIdRef = useRef(conversationId);
+  conversationIdRef.current = conversationId;
+
   useEffect(() => {
-    if (!isOpen) {
-      if (conversationId) {
-        endConversation();
-      }
-      // Reset initialization flag when modal closes so it can be initialized again
+    if (!isOpen) return undefined;
+
+    fetchAbortRef.current = new AbortController();
+    return () => {
+      fetchAbortRef.current?.abort();
+      fetchAbortRef.current = null;
       isInitializingRef.current = false;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, conversationId]);
+      const id = conversationIdRef.current;
+      if (id) {
+        fetch(`${API_URL}/ai-chat/conversations/${id}/end`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        }).catch(() => {});
+      }
+    };
+  }, [isOpen]);
 
   const endConversation = async () => {
     if (!conversationId) return;
@@ -81,23 +99,18 @@ const AIChatModal = ({ isOpen, onClose, position = 'center' }) => {
 
   // Keyboard shortcuts
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return undefined;
 
     const handleKeyDown = (e) => {
-      // Escape to close modal
-      if (e.key === 'Escape' && !isMaximized) {
+      if (e.key === 'Escape') {
         onClose();
         return;
       }
 
-      // Don't handle shortcuts if user is typing in input
       if (document.activeElement?.tagName === 'TEXTAREA' || document.activeElement?.tagName === 'INPUT') {
-        // Enter to send (handled in form submit)
-        // Shift+Enter for newline is default browser behavior
         return;
       }
 
-      // Focus input with Cmd/Ctrl+K
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         inputRef.current?.focus();
@@ -106,7 +119,17 @@ const AIChatModal = ({ isOpen, onClose, position = 'center' }) => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isMaximized, onClose]);
+  }, [isOpen, onClose]);
+
+  // Lock body scroll while the modal is open (matches other dialogs).
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -114,7 +137,7 @@ const AIChatModal = ({ isOpen, onClose, position = 'center' }) => {
 
   const loadConversationHistory = async (sessionId) => {
     try {
-      const response = await fetch(`${API_URL}/ai-chat/conversations/session/${sessionId}`, {
+      const response = await chatFetch(`${API_URL}/ai-chat/conversations/session/${sessionId}`, {
         credentials: 'include',
       });
 
@@ -252,7 +275,7 @@ const AIChatModal = ({ isOpen, onClose, position = 'center' }) => {
       userInfo.utmContent = urlParams.get('utm_content');
 
       // Create new conversation
-      const response = await fetch(`${API_URL}/ai-chat/conversations`, {
+      const response = await chatFetch(`${API_URL}/ai-chat/conversations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -312,7 +335,7 @@ const AIChatModal = ({ isOpen, onClose, position = 'center' }) => {
   const saveMessage = async (convId, message) => {
     if (!convId) return;
     try {
-      await fetch(`${API_URL}/ai-chat/conversations/${convId}/messages`, {
+      await chatFetch(`${API_URL}/ai-chat/conversations/${convId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -337,7 +360,7 @@ const AIChatModal = ({ isOpen, onClose, position = 'center' }) => {
     if (!convId) return null;
     try {
       setError(null);
-      const res = await fetch(`${API_URL}/ai-chat/conversations/${convId}/messages`, {
+      const res = await chatFetch(`${API_URL}/ai-chat/conversations/${convId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -493,7 +516,7 @@ const AIChatModal = ({ isOpen, onClose, position = 'center' }) => {
     if (!conversationId) return;
     
     try {
-      await fetch(`${API_URL}/ai-chat/conversations/${conversationId}`, {
+      await chatFetch(`${API_URL}/ai-chat/conversations/${conversationId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

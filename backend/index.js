@@ -9,6 +9,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import webPush from 'web-push';
+import rateLimit from 'express-rate-limit';
 import { isConfigured as aiConfigured, generateReply as generateAIReply, MAX_HISTORY as AI_MAX_HISTORY } from './services/aiService.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -108,15 +109,17 @@ const pool = new Pool({
 // Handle pool errors gracefully to prevent server crashes
 pool.on('error', (err) => {
   console.error('Unexpected error on idle database client:', err);
-  // Don't crash the server - log the error and let the pool handle reconnection
-  // The pool will automatically try to reconnect on the next query
+  // Don't crash the server - the pool will handle reconnection on the next query
 });
 
-// Handle connection errors
+// Attach a single error listener per client. Guard with a WeakSet so we never
+// stack duplicates over the process lifetime if the same client is re-emitted.
+const pgClientsWithErrorHandler = new WeakSet();
 pool.on('connect', (client) => {
+  if (pgClientsWithErrorHandler.has(client)) return;
+  pgClientsWithErrorHandler.add(client);
   client.on('error', (err) => {
     console.error('Database client error:', err.message);
-    // Log but don't crash - the pool will handle reconnection
   });
 });
 
@@ -428,6 +431,20 @@ const createTables = async () => {
 
       CREATE INDEX IF NOT EXISTS idx_consultation_drafts_session_id ON consultation_drafts(session_id);
       CREATE INDEX IF NOT EXISTS idx_consultation_drafts_email ON consultation_drafts(email);
+
+      CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        status VARCHAR(50) DEFAULT 'subscribed',
+        source VARCHAR(100),
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_newsletter_subscribers_email ON newsletter_subscribers(email);
+      CREATE INDEX IF NOT EXISTS idx_newsletter_subscribers_status ON newsletter_subscribers(status);
 
       CREATE TABLE IF NOT EXISTS tickets (
         id SERIAL PRIMARY KEY,
@@ -1827,12 +1844,11 @@ app.options('*', (req, res) => {
         res.header('Access-Control-Max-Age', '86400');
         return res.sendStatus(200);
       } else {
-        // Log rejected origin for debugging
         if (origin) {
           console.warn(`CORS: Origin not allowed: ${origin}. Allowed origins:`, allowedOrigins);
         }
-        // Origin not allowed - return 403 but still send CORS headers to prevent browser errors
-        res.header('Access-Control-Allow-Origin', origin || '*');
+        // Do NOT echo Access-Control-Allow-Origin for a denied origin — that
+        // would trick a permissive browser into treating it as allowed.
         return res.sendStatus(403);
       }
     } else {
@@ -1889,9 +1905,37 @@ app.use((req, res, next) => {
   }
 });
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// Larger body limit is only allowed for authenticated asset upload routes
+// that accept base64 data URLs. Default stays small to blunt DoS surface.
+const ASSET_UPLOAD_PATHS = ['/api/dashboard/assets', '/api/admin/assets'];
+app.use((req, res, next) => {
+  const isAssetUpload =
+    (req.method === 'POST' || req.method === 'PUT') &&
+    ASSET_UPLOAD_PATHS.some((p) => req.path === p || req.path.startsWith(`${p}/`));
+  const limit = isAssetUpload ? '25mb' : '1mb';
+  return express.json({ limit })(req, res, (err) => {
+    if (err) return next(err);
+    return express.urlencoded({ extended: true, limit })(req, res, next);
+  });
+});
 app.use(cookieParser());
+
+// Global rate limiters for public write endpoints. Authenticated portal/admin
+// traffic goes through JWT-checked routes and is not affected here.
+const publicWriteLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please try again shortly.' },
+});
+const analyticsLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many events. Please slow down.' },
+});
 
 // Comprehensive Caching Headers Middleware
 const setCacheHeaders = (req, res, next) => {
@@ -4511,7 +4555,7 @@ const clampInteger = (value) => {
 };
 
 // Track analytics event (public endpoint)
-app.post('/api/analytics/track', async (req, res) => {
+app.post('/api/analytics/track', analyticsLimiter, async (req, res) => {
   try {
     const { type, data } = req.body;
     
@@ -4632,7 +4676,7 @@ app.post('/api/analytics/track', async (req, res) => {
 });
 
 // Track analytics events in batch (public endpoint)
-app.post('/api/analytics/track-batch', async (req, res) => {
+app.post('/api/analytics/track-batch', analyticsLimiter, async (req, res) => {
   try {
     const { events } = req.body;
     
@@ -4703,7 +4747,7 @@ app.post('/api/analytics/track-batch', async (req, res) => {
 });
 
 // Submit consultation form (public endpoint)
-app.post('/api/consultation/submit', async (req, res) => {
+app.post('/api/consultation/submit', publicWriteLimiter, async (req, res) => {
   try {
     const {
       name,
@@ -4725,9 +4769,20 @@ app.post('/api/consultation/submit', async (req, res) => {
       utmContent
     } = req.body;
 
-    // Validate required fields
-    if (!name || !email || !phone) {
+    const trimmedName = typeof name === 'string' ? name.trim() : '';
+    const trimmedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    const trimmedPhone = typeof phone === 'string' ? phone.trim() : '';
+    const trimmedMessage = typeof message === 'string' ? message.trim() : '';
+    const trimmedCompany = typeof company === 'string' ? company.trim() : '';
+
+    if (!trimmedName || !trimmedEmail || !trimmedPhone) {
       return res.status(400).json({ error: 'Name, email, and phone are required' });
+    }
+    if (trimmedName.length > 120 || trimmedCompany.length > 200 || trimmedMessage.length > 4000 || trimmedPhone.length > 40 || trimmedEmail.length > 254) {
+      return res.status(400).json({ error: 'One or more fields exceed the allowed length.' });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      return res.status(400).json({ error: 'A valid email address is required.' });
     }
 
     // Get session ID from analytics tracker if available
@@ -4757,9 +4812,9 @@ app.post('/api/consultation/submit', async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
        RETURNING id, created_at`,
       [
-        sessionId, name, email, phone, company || null, selectedPlan || null, selectedPlanPrice || null,
-        timeline || null, budget || null, message || null, qaResponsesParsed ? JSON.stringify(qaResponsesParsed) : null,
-        timezone || null, pageUrl || null, userAgent || null, utmMedium || null, utmSource || null, 
+        sessionId, trimmedName, trimmedEmail, trimmedPhone, trimmedCompany || null, selectedPlan || null, selectedPlanPrice || null,
+        timeline || null, budget || null, trimmedMessage || null, qaResponsesParsed ? JSON.stringify(qaResponsesParsed) : null,
+        timezone || null, pageUrl || null, userAgent || null, utmMedium || null, utmSource || null,
         utmCampaign || null, utmContent || null, referrer, ipAddress
       ]
     );
@@ -4784,8 +4839,70 @@ app.post('/api/consultation/submit', async (req, res) => {
   }
 });
 
+// Newsletter subscription (public endpoint)
+const NEWSLETTER_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+app.post('/api/newsletter/subscribe', publicWriteLimiter, async (req, res) => {
+  try {
+    const rawEmail = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    if (!rawEmail || rawEmail.length > 254 || !NEWSLETTER_EMAIL_RE.test(rawEmail)) {
+      return res.status(400).json({ error: 'A valid email address is required.' });
+    }
+
+    const source = typeof req.body?.source === 'string' ? req.body.source.slice(0, 100) : 'website';
+    const ipAddress = req.ip || req.connection?.remoteAddress || null;
+    const userAgent = req.get('user-agent') || null;
+
+    const existing = await pool.query(
+      'SELECT id, status FROM newsletter_subscribers WHERE email = $1',
+      [rawEmail]
+    );
+
+    if (existing.rows.length > 0) {
+      const current = existing.rows[0];
+      if (current.status === 'subscribed') {
+        return res.json({
+          success: true,
+          status: 'already_subscribed',
+          message: "You're already subscribed!",
+        });
+      }
+      // Re-subscribe if previously unsubscribed
+      await pool.query(
+        `UPDATE newsletter_subscribers
+         SET status = 'subscribed', updated_at = CURRENT_TIMESTAMP,
+             source = COALESCE($2, source), ip_address = COALESCE($3, ip_address),
+             user_agent = COALESCE($4, user_agent)
+         WHERE id = $1`,
+        [current.id, source, ipAddress, userAgent]
+      );
+      return res.json({
+        success: true,
+        status: 'resubscribed',
+        message: "Welcome back! You're subscribed again.",
+      });
+    }
+
+    await pool.query(
+      `INSERT INTO newsletter_subscribers (email, source, ip_address, user_agent)
+       VALUES ($1, $2, $3, $4)`,
+      [rawEmail, source, ipAddress, userAgent]
+    );
+
+    return res.json({
+      success: true,
+      status: 'subscribed',
+      message: "You're in! Check your inbox.",
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Newsletter subscription error:', error);
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Save consultation draft (public endpoint)
-app.post('/api/consultation/draft', async (req, res) => {
+app.post('/api/consultation/draft', publicWriteLimiter, async (req, res) => {
   try {
     const { sessionId, email, formData } = req.body;
 
@@ -4900,7 +5017,7 @@ app.get('/api/consultation/draft', async (req, res) => {
 // ==================== Pricing Page Interactions Endpoints ====================
 
 // Save pricing page interaction (public endpoint)
-app.post('/api/pricing/interaction', async (req, res) => {
+app.post('/api/pricing/interaction', publicWriteLimiter, async (req, res) => {
   try {
     const {
       sessionId,
@@ -5064,7 +5181,7 @@ app.get('/api/pricing/interactions/:sessionId', async (req, res) => {
 });
 
 // Submit site feedback / ideas (public endpoint)
-app.post('/api/feedback/ideas', async (req, res) => {
+app.post('/api/feedback/ideas', publicWriteLimiter, async (req, res) => {
   try {
     const { name, email, category, message } = req.body;
 
@@ -5129,7 +5246,7 @@ app.post('/api/feedback/ideas', async (req, res) => {
 });
 
 // Submit feedback (public endpoint)
-app.post('/api/feedback', async (req, res) => {
+app.post('/api/feedback', publicWriteLimiter, async (req, res) => {
   try {
     const { type, rating, description, page_url, user_agent } = req.body;
 
@@ -7336,6 +7453,39 @@ process.on('uncaughtException', (error) => {
 const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 5001;
 const MAX_PORT_ATTEMPTS = 5;
 
+let httpServer = null;
+let isShuttingDown = false;
+
+const shutdown = async (signal) => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
+
+  const forceExit = setTimeout(() => {
+    console.error('Graceful shutdown timed out. Forcing exit.');
+    process.exit(1);
+  }, 15000);
+  forceExit.unref();
+
+  try {
+    if (httpServer) {
+      await new Promise((resolve) => httpServer.close(() => resolve()));
+      console.log('HTTP server closed.');
+    }
+    await pool.end();
+    console.log('Database pool closed. Bye!');
+    clearTimeout(forceExit);
+    process.exit(0);
+  } catch (err) {
+    console.error('Error during shutdown:', err);
+    clearTimeout(forceExit);
+    process.exit(1);
+  }
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
 const startServer = (port = DEFAULT_PORT, attemptsRemaining = MAX_PORT_ATTEMPTS) => {
   const server = app
     .listen(port, () => {
@@ -7360,6 +7510,7 @@ const startServer = (port = DEFAULT_PORT, attemptsRemaining = MAX_PORT_ATTEMPTS)
       }
     });
 
+  httpServer = server;
   return server;
 };
 

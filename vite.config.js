@@ -40,6 +40,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: [
         'logo.png',
+        'og-image.png',
         'robots.txt',
         'sitemap.xml',
         'offline.html',
@@ -95,7 +96,7 @@ export default defineConfig({
             name: 'Portfolio',
             short_name: 'Portfolio',
             description: 'See our development portfolio',
-            url: '/products',
+            url: '/portfolio',
             icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96' }]
           }
         ]

@@ -1,171 +1,390 @@
-import { CheckCircle, AlertCircle } from "lucide-react";
-import { useState, useEffect } from "react";
-import { sanitizeInput, validateFormData, validationRules, rateLimiter, generateCSRFToken } from "../utils/security.js";
+import { CheckCircle, AlertCircle, Send, Loader } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import {
+  sanitizeInput,
+  validateFormData,
+  validationRules,
+  rateLimiter,
+  generateCSRFToken,
+  formatPhoneNumber,
+  isValidPhone,
+} from "../utils/security.js";
 import { companyInfo } from "../constants/companyInfo";
+import { API_URL } from "../utils/apiConfig.js";
+
+const PROJECT_TYPES = [
+  { value: "", label: "Select a project type" },
+  { value: "website", label: "Marketing site / UI/UX" },
+  { value: "webapp", label: "Web application" },
+  { value: "mobile", label: "Mobile app" },
+  { value: "saas", label: "SaaS platform" },
+  { value: "ai", label: "AI / automation" },
+  { value: "other", label: "Something else" },
+];
+
+const CONTACT_FORM_KEY = "contact-form";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    company: '',
-    projectType: '',
-    message: ''
+    name: "",
+    email: "",
+    phone: "",
+    company: "",
+    projectType: "",
+    message: "",
   });
-  const [selectedPackage, setSelectedPackage] = useState('');
-  const [selectedPrice, setSelectedPrice] = useState('');
+  const [selectedPackage, setSelectedPackage] = useState("");
+  const [selectedPrice, setSelectedPrice] = useState("");
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
-  const [csrfToken, setCsrfToken] = useState('');
+  const [csrfToken, setCsrfToken] = useState("");
 
-  // Generate CSRF token on component mount
+  // Track mount so async work never calls setState on an unmounted component.
+  const isMountedRef = useRef(true);
+  const abortRef = useRef(null);
+
   useEffect(() => {
     setCsrfToken(generateCSRFToken());
-    
-    // Read URL parameters
+
     const urlParams = new URLSearchParams(window.location.search);
-    const packageParam = urlParams.get('package');
-    const priceParam = urlParams.get('price');
-    
+    const packageParam = urlParams.get("package");
+    const priceParam = urlParams.get("price");
+
     if (packageParam && priceParam) {
-      setSelectedPackage(decodeURIComponent(packageParam));
-      setSelectedPrice(decodeURIComponent(priceParam));
-      
-      // Map package names to project types
-      let projectType = '';
-      if (packageParam.includes('UI/UX Master Suite')) {
-        projectType = 'website';
-      } else if (packageParam.includes('Full Stack Development Platform')) {
-        projectType = 'webapp';
-      } else if (packageParam.includes('Complete SaaS Ecosystem')) {
-        projectType = 'saas';
-      }
-      
-      // Pre-populate form with selected package info
-      setFormData(prev => ({
+      const decodedPackage = decodeURIComponent(packageParam);
+      const decodedPrice = decodeURIComponent(priceParam);
+      setSelectedPackage(decodedPackage);
+      setSelectedPrice(decodedPrice);
+
+      let projectType = "";
+      if (decodedPackage.includes("UI/UX")) projectType = "website";
+      else if (decodedPackage.includes("Full Stack")) projectType = "webapp";
+      else if (decodedPackage.includes("SaaS")) projectType = "saas";
+
+      setFormData((prev) => ({
         ...prev,
-        projectType: projectType,
-        message: `I'm interested in the ${decodeURIComponent(packageParam)} package (${decodeURIComponent(priceParam)}). Please provide more details about this service.`
+        projectType,
+        message: `I'm interested in the ${decodedPackage} package (${decodedPrice}). Please share next steps.`,
       }));
     }
+
+    return () => {
+      isMountedRef.current = false;
+      if (abortRef.current) abortRef.current.abort();
+    };
   }, []);
 
   const validateForm = () => {
-    // Sanitize all inputs
-    const sanitizedData = {
+    const sanitized = {
       name: sanitizeInput(formData.name),
       email: sanitizeInput(formData.email),
       company: sanitizeInput(formData.company),
-      message: sanitizeInput(formData.message)
+      message: sanitizeInput(formData.message),
     };
-    
-    // Validate using security rules
-    const newErrors = validateFormData(sanitizedData, validationRules);
-    
+    const newErrors = validateFormData(sanitized, validationRules);
+    const phoneDigits = formData.phone.replace(/\D/g, '');
+    if (!phoneDigits) {
+      newErrors.phone = 'phone is required';
+    } else if (!isValidPhone(formData.phone)) {
+      newErrors.phone = 'phone format is invalid';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: name === 'phone' ? formatPhoneNumber(value) : value,
     }));
-    
-    // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Rate limiting check
-    const clientId = 'contact-form'; // In a real app, use user IP or session ID
-    if (!rateLimiter.isAllowed(clientId)) {
-      setSubmitStatus('error');
-      setErrors({ general: 'Too many requests. Please try again later.' });
-      return;
-    }
-    
-    if (!validateForm()) {
-      return;
-    }
-    
-    setIsSubmitting(true);
     setSubmitStatus(null);
-    
+
+    if (!rateLimiter.isAllowed(CONTACT_FORM_KEY)) {
+      setSubmitStatus("error");
+      setErrors({ general: "Too many requests. Please wait a minute and try again." });
+      return;
+    }
+
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
-      // Simulate form submission
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // In a real app, you would send this to your backend
-      if (import.meta.env.DEV) {
-        console.log('Form submitted:', formData);
-      }
-      
-      setSubmitStatus('success');
-      setFormData({
-        name: '',
-        email: '',
-        company: '',
-        projectType: '',
-        message: ''
+      const payload = {
+        name: sanitizeInput(formData.name),
+        email: sanitizeInput(formData.email),
+        phone: sanitizeInput(formData.phone),
+        company: sanitizeInput(formData.company),
+        message: sanitizeInput(formData.message),
+        selectedPlan: selectedPackage || undefined,
+        selectedPlanPrice: selectedPrice || undefined,
+        pageUrl: typeof window !== "undefined" ? window.location.href : undefined,
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+
+      const res = await fetch(`${API_URL}/consultation/submit`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken,
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
       });
-    } catch (error) {
-      setSubmitStatus('error');
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!isMountedRef.current) return;
+
+      if (!res.ok) {
+        throw new Error(data.error || "Submission failed");
+      }
+
+      setSubmitStatus("success");
+      setFormData({ name: "", email: "", phone: "", company: "", projectType: "", message: "" });
+    } catch (err) {
+      if (err.name === "AbortError") return;
+      if (!isMountedRef.current) return;
+      setSubmitStatus("error");
+      setErrors({ general: err.message || "Something went wrong. Please try again." });
     } finally {
-      setIsSubmitting(false);
+      if (isMountedRef.current) setIsSubmitting(false);
+      abortRef.current = null;
     }
   };
+
+  const inputClass =
+    "w-full px-4 py-3 bg-neutral-900/70 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors";
 
   return (
     <div className="mt-20" id="contact">
       <h2 className="text-3xl sm:text-5xl lg:text-6xl text-center my-8 tracking-wide">
-        <span className="text-white">Let’s Build Your</span>
+        <span className="text-white">Let&rsquo;s Build Your</span>
         <br />
         <span className="bg-gradient-to-r from-orange-400 to-orange-600 text-transparent bg-clip-text drop-shadow-lg">
           Next Big Thing.
         </span>
       </h2>
-      <p className="text-center text-neutral-200 text-lg mb-8 max-w-3xl mx-auto leading-relaxed">
-        Book a call or drop a message — let’s turn your idea into a scalable product.
+      <p className="text-center text-neutral-200 text-lg mb-8 max-w-3xl mx-auto leading-relaxed px-4">
+        Book a call or drop a message &mdash; we&rsquo;ll respond within one business day.
       </p>
-      
-      {/* Selected Package Indicator */}
+
       {selectedPackage && selectedPrice && (
-        <div className="max-w-4xl mx-auto mb-6 p-4 bg-orange-900/20 border border-orange-500/50 rounded-lg">
-          <p className="text-orange-400 text-center">
-            <span className="font-semibold">Selected Package:</span> {selectedPackage} - {selectedPrice}
+        <div className="max-w-4xl mx-auto mb-6 px-4">
+          <div className="p-4 bg-orange-900/20 border border-orange-500/50 rounded-lg">
+            <p className="text-orange-400 text-center">
+              <span className="font-semibold">Selected Package:</span> {selectedPackage} &mdash; {selectedPrice}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {submitStatus === "success" && (
+        <div className="max-w-4xl mx-auto mb-6 px-4">
+          <div
+            className="p-4 bg-green-900/20 border border-green-500/50 rounded-lg flex items-center gap-3"
+            role="status"
+            aria-live="polite"
+          >
+            <CheckCircle className="text-green-500 shrink-0" />
+            <p className="text-green-400">
+              Thanks! We&rsquo;ve received your message and will respond within one business day.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {submitStatus === "error" && (
+        <div className="max-w-4xl mx-auto mb-6 px-4">
+          <div className="p-4 bg-red-900/20 border border-red-500/50 rounded-lg flex items-center gap-3" role="alert">
+            <AlertCircle className="text-red-500 shrink-0" />
+            <p className="text-red-400">{errors.general || "Something went wrong. Please try again."}</p>
+          </div>
+        </div>
+      )}
+
+      <form
+        onSubmit={handleSubmit}
+        noValidate
+        className="max-w-4xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-5"
+      >
+        <input type="hidden" name="csrf" value={csrfToken} readOnly />
+
+        <div>
+          <label htmlFor="contact-name" className="block text-sm font-medium text-neutral-200 mb-2">
+            Full name<span className="text-orange-400"> *</span>
+          </label>
+          <input
+            id="contact-name"
+            name="name"
+            type="text"
+            autoComplete="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            className={inputClass}
+            placeholder="Jane Doe"
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? "contact-name-error" : undefined}
+            required
+          />
+          {errors.name && (
+            <p id="contact-name-error" className="mt-1 text-sm text-red-400">
+              {errors.name}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="contact-email" className="block text-sm font-medium text-neutral-200 mb-2">
+            Work email<span className="text-orange-400"> *</span>
+          </label>
+          <input
+            id="contact-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            className={inputClass}
+            placeholder={companyInfo.placeholders?.email || "you@company.com"}
+            aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? "contact-email-error" : undefined}
+            required
+          />
+          {errors.email && (
+            <p id="contact-email-error" className="mt-1 text-sm text-red-400">
+              {errors.email}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="contact-phone" className="block text-sm font-medium text-neutral-200 mb-2">
+            Phone<span className="text-orange-400"> *</span>
+          </label>
+          <input
+            id="contact-phone"
+            name="phone"
+            type="tel"
+            autoComplete="tel"
+            inputMode="tel"
+            value={formData.phone}
+            onChange={handleInputChange}
+            className={inputClass}
+            placeholder="(408) 555-0123"
+            aria-invalid={!!errors.phone}
+            aria-describedby={errors.phone ? "contact-phone-error" : undefined}
+            required
+          />
+          {errors.phone && (
+            <p id="contact-phone-error" className="mt-1 text-sm text-red-400">
+              {errors.phone}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="contact-company" className="block text-sm font-medium text-neutral-200 mb-2">
+            Company
+          </label>
+          <input
+            id="contact-company"
+            name="company"
+            type="text"
+            autoComplete="organization"
+            value={formData.company}
+            onChange={handleInputChange}
+            className={inputClass}
+            placeholder="Acme Inc."
+          />
+        </div>
+
+        <div>
+          <label htmlFor="contact-project-type" className="block text-sm font-medium text-neutral-200 mb-2">
+            Project type
+          </label>
+          <select
+            id="contact-project-type"
+            name="projectType"
+            value={formData.projectType}
+            onChange={handleInputChange}
+            className={inputClass}
+          >
+            {PROJECT_TYPES.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="md:col-span-2">
+          <label htmlFor="contact-message" className="block text-sm font-medium text-neutral-200 mb-2">
+            What are you trying to build?<span className="text-orange-400"> *</span>
+          </label>
+          <textarea
+            id="contact-message"
+            name="message"
+            rows={5}
+            value={formData.message}
+            onChange={handleInputChange}
+            className={`${inputClass} resize-y`}
+            placeholder="A few sentences about the problem, users, and timeline."
+            aria-invalid={!!errors.message}
+            aria-describedby={errors.message ? "contact-message-error" : undefined}
+            required
+          />
+          {errors.message && (
+            <p id="contact-message-error" className="mt-1 text-sm text-red-400">
+              {errors.message}
+            </p>
+          )}
+        </div>
+
+        <div className="md:col-span-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <p className="text-sm text-neutral-400">
+            Prefer to talk live? <span className="text-neutral-200">Book a slot below.</span>
           </p>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold shadow-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader className="w-5 h-5 animate-spin" />
+                Sending&hellip;
+              </>
+            ) : (
+              <>
+                Send message
+                <Send className="w-4 h-4" />
+              </>
+            )}
+          </button>
         </div>
-      )}
-      
-      {/* Success/Error Messages */}
-      {submitStatus === 'success' && (
-        <div className="max-w-4xl mx-auto mb-6 p-4 bg-green-900/20 border border-green-500/50 rounded-lg flex items-center">
-          <CheckCircle className="text-green-500 mr-3" />
-          <p className="text-green-400">Thank you! We'll get back to you within 24 hours.</p>
-        </div>
-      )}
-      
-      {submitStatus === 'error' && (
-        <div className="max-w-4xl mx-auto mb-6 p-4 bg-red-900/20 border border-red-500/50 rounded-lg flex items-center">
-          <AlertCircle className="text-red-500 mr-3" />
-          <p className="text-red-400">Something went wrong. Please try again or contact us directly.</p>
-        </div>
-      )}
-      
+      </form>
+
       <style>{`
         input:-webkit-autofill,
         input:-webkit-autofill:focus,
         input:-webkit-autofill:hover,
-        input:-webkit-autofill:active {
+        input:-webkit-autofill:active,
+        select:-webkit-autofill,
+        textarea:-webkit-autofill {
           box-shadow: 0 0 0px 1000px #1a1a1a inset !important;
           -webkit-text-fill-color: #fff !important;
           transition: background-color 5000s ease-in-out 0s;
@@ -175,4 +394,4 @@ const Contact = () => {
   );
 };
 
-export default Contact; 
+export default Contact;

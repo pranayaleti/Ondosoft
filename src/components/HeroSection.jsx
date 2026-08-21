@@ -15,19 +15,34 @@ const HeroSection = ({ onOpenSchedule }) => {
   
   const [currentHeadingIndex, setCurrentHeadingIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    if (mediaQuery.matches) return undefined;
+
+    let transitionTimeoutId = null;
     const interval = setInterval(() => {
       setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentHeadingIndex((prevIndex) => 
-          (prevIndex + 1) % fancyHeadings.length
-        );
+      transitionTimeoutId = setTimeout(() => {
+        setCurrentHeadingIndex((prevIndex) => (prevIndex + 1) % fancyHeadings.length);
         setIsTransitioning(false);
-      }, 350); // Slightly longer for smoother transition
-    }, 2500); // Change every 2.5 seconds for better readability
+        transitionTimeoutId = null;
+      }, 350);
+    }, 2500);
 
-    return () => clearInterval(interval);
+    const onChange = (event) => setPrefersReducedMotion(event.matches);
+    mediaQuery.addEventListener?.('change', onChange);
+
+    return () => {
+      clearInterval(interval);
+      if (transitionTimeoutId) clearTimeout(transitionTimeoutId);
+      mediaQuery.removeEventListener?.('change', onChange);
+    };
   }, [fancyHeadings.length]);
 
   const handleScheduleClick = useCallback(() => {
@@ -56,14 +71,16 @@ const HeroSection = ({ onOpenSchedule }) => {
           {/* Rotating Fancy Heading - Enhanced Connective Style */}
           <div className="mb-6 sm:mb-7 md:mb-8 min-h-[120px] sm:min-h-[140px] md:min-h-[160px] lg:min-h-[180px] flex items-start justify-center lg:justify-start relative overflow-hidden">
             <div 
-              className={`w-full max-w-full transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                isTransitioning 
-                  ? 'opacity-0 transform translate-y-4 scale-95 blur-sm' 
-                  : 'opacity-100 transform translate-y-0 scale-100 blur-0'
+              className={`w-full max-w-full ${
+                prefersReducedMotion
+                  ? 'opacity-100'
+                  : `transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                      isTransitioning
+                        ? 'opacity-0 transform translate-y-4 scale-95 blur-sm'
+                        : 'opacity-100 transform translate-y-0 scale-100 blur-0'
+                    }`
               }`}
-              style={{
-                transitionProperty: 'opacity, transform, filter',
-              }}
+              style={prefersReducedMotion ? undefined : { transitionProperty: 'opacity, transform, filter' }}
             >
               <FancyHeading 
                 firstWord={fancyHeadings[currentHeadingIndex].firstWord}

@@ -30,28 +30,32 @@ const PortfolioPage = () => {
 
   // Lazy load video when it comes into viewport
   useEffect(() => {
-    if (!videoContainerRef.current) return;
+    if (!videoContainerRef.current) return undefined;
 
+    let loadTimeoutId = null;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVideoInView(true);
-          // Delay video loading slightly to prioritize other content
-          setTimeout(() => {
+          loadTimeoutId = setTimeout(() => {
             setShouldLoadVideo(true);
+            loadTimeoutId = null;
           }, 500);
           observer.disconnect();
         }
       },
       {
-        rootMargin: '100px', // Start loading when 100px away from viewport
-        threshold: 0.1
+        rootMargin: '100px',
+        threshold: 0.1,
       }
     );
 
     observer.observe(videoContainerRef.current);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (loadTimeoutId) clearTimeout(loadTimeoutId);
+    };
   }, []);
 
   // Auto-play video when it's loaded and in view

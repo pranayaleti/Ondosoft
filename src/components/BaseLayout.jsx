@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut, Home, Menu, X } from 'lucide-react';
 
@@ -34,6 +35,10 @@ const BaseLayout = ({ title, navItems }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
+      {/* Authenticated surfaces (admin + portal) must not be indexed. */}
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+      </Helmet>
       <div className="flex">
         {/* Sidebar */}
         <aside className={`fixed h-screen left-0 z-40 w-64 bg-gray-900/95 backdrop-blur-sm border-r border-gray-800 transform transition-transform duration-300 ease-in-out overflow-hidden ${

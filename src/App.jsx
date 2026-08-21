@@ -35,8 +35,6 @@ const ContactPage = lazy(() => import("./pages/ContactPage"));
 const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const SitemapPage = lazy(() => import("./pages/SitemapPage"));
-const SitemapXMLPage = lazy(() => import("./pages/SitemapXMLPage"));
-const RobotsPage = lazy(() => import("./pages/RobotsPage"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsOfUsePage = lazy(() => import("./pages/TermsOfUsePage"));
@@ -77,17 +75,16 @@ const ScrollToTop = () => {
   const prevPathnameRef = useRef(pathname);
 
   useEffect(() => {
-    // Track navigation if pathname changed
     if (prevPathnameRef.current !== pathname) {
       analyticsTracker.trackNavigation(prevPathnameRef.current, pathname, 'programmatic');
       analyticsTracker.trackPageView(pathname);
       prevPathnameRef.current = pathname;
     }
-    
-    // Use requestAnimationFrame for smoother scroll
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, behavior: 'instant' });
+
+    const rafId = requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'auto' });
     });
+    return () => cancelAnimationFrame(rafId);
   }, [pathname]);
 
   return null;
@@ -96,134 +93,160 @@ const ScrollToTop = () => {
 const AppRoutes = () => {
   const location = useLocation();
   
-  // Initialize performance optimizations
+  // Initialize performance optimizations + analytics on idle, and tear both
+  // down (analytics listeners, pending timers, load handler) on unmount so the
+  // app can be remounted (React Strict Mode, tests) without leaking.
   useEffect(() => {
     initPerformanceOptimizations();
-    // Defer analytics initialization to avoid blocking critical path
-    // Use requestIdleCallback or setTimeout to ensure it doesn't block rendering
-    const initAnalytics = () => {
-      analyticsTracker.init();
-    };
-    
+
+    const initAnalytics = () => analyticsTracker.init();
+    let idleHandle = null;
+    let fallbackTimeout = null;
+    let loadHandler = null;
+
     if ('requestIdleCallback' in window) {
-      requestIdleCallback(initAnalytics, { timeout: 3000 });
+      idleHandle = requestIdleCallback(initAnalytics, { timeout: 3000 });
+    } else if (document.readyState === 'complete') {
+      fallbackTimeout = setTimeout(initAnalytics, 100);
     } else {
-      // Fallback: wait for page to be interactive
-      if (document.readyState === 'complete') {
-        setTimeout(initAnalytics, 100);
-      } else {
-        window.addEventListener('load', () => {
-          setTimeout(initAnalytics, 100);
-        });
-      }
+      loadHandler = () => {
+        fallbackTimeout = setTimeout(initAnalytics, 100);
+      };
+      window.addEventListener('load', loadHandler);
     }
+
+    return () => {
+      if (idleHandle && 'cancelIdleCallback' in window) cancelIdleCallback(idleHandle);
+      if (fallbackTimeout) clearTimeout(fallbackTimeout);
+      if (loadHandler) window.removeEventListener('load', loadHandler);
+      analyticsTracker.cleanup();
+    };
   }, []);
 
-  // Prefetch public route chunks on idle (aligns with Speculation Rules in index.html; admin/portal load on-demand)
+  // Prefetch public route chunks on idle so navigation feels instant, but keep
+  // the timeout IDs so we can cancel them if the app unmounts before they fire.
   useEffect(() => {
-    if ('requestIdleCallback' in window) {
-      const prefetchRoutes = () => {
-        const commonRoutes = [
-          () => import('./pages/ServicesPage'),
-          () => import('./pages/ContactPage'),
-          () => import('./pages/AboutPage'),
-          () => import('./pages/PricingPage'),
-          () => import('./pages/PortfolioPage'),
-          () => import('./pages/BlogPage'),
-          () => import('./pages/FAQPage'),
-        ];
-        commonRoutes.forEach((prefetchFn, index) => {
-          setTimeout(() => prefetchFn().catch(() => {}), index * 80);
-        });
-      };
-      requestIdleCallback(prefetchRoutes, { timeout: 2000 });
-    }
+    if (!('requestIdleCallback' in window)) return undefined;
+
+    const timeoutIds = [];
+    const idleHandle = requestIdleCallback(() => {
+      const commonRoutes = [
+        () => import('./pages/ServicesPage'),
+        () => import('./pages/ContactPage'),
+        () => import('./pages/AboutPage'),
+        () => import('./pages/PricingPage'),
+        () => import('./pages/PortfolioPage'),
+        () => import('./pages/BlogPage'),
+        () => import('./pages/FAQPage'),
+      ];
+      commonRoutes.forEach((prefetchFn, index) => {
+        const id = setTimeout(() => prefetchFn().catch(() => {}), index * 80);
+        timeoutIds.push(id);
+      });
+    }, { timeout: 2000 });
+
+    return () => {
+      if ('cancelIdleCallback' in window) cancelIdleCallback(idleHandle);
+      timeoutIds.forEach(clearTimeout);
+    };
   }, []);
+
+  // Reset the route-level ErrorBoundary whenever the route changes so a page
+  // crash on one route doesn't blank subsequent navigations.
+  const routeKey = location.pathname;
 
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-orange-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white"
+        >
+          Skip to main content
+        </a>
         <PerformanceMonitor />
         <ScriptOptimizer />
         <SchemaMarkup />
         <Navbar />
         <NavigationLoader />
         <ScrollToTop />
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/services" element={<ServicesPage />} />
-          <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/testimonials" element={<TestimonialsPage />} />
-          <Route path="/portfolio" element={<PortfolioPage />} />
-          <Route path="/blogs" element={<BlogPage />} />
-          <Route path="/blogs/:slug" element={<BlogPostPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/feedback" element={<FeedbackPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/faq" element={<FAQPage />} />
-          <Route path="/legal" element={<LegalPage />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-          <Route path="/terms-of-use" element={<TermsOfUsePage />} />
-          <Route path="/nda" element={<NDAPage />} />
-          <Route path="/licensing" element={<LicensingPage />} />
-          <Route path="/accessibility" element={<AccessibilityPage />} />
-          <Route path="/capabilities-deck" element={<CapabilitiesDeckPage />} />
-          <Route path="/demo" element={<DemoPage />} />
-          <Route path="/sitemap" element={<SitemapPage />} />
-          <Route path="/sitemap.xml" element={<SitemapXMLPage />} />
-          <Route path="/robots.txt" element={<RobotsPage />} />
-          
-          {/* Auth Routes */}
-          <Route path="/auth/signup" element={<SignUpPage />} />
-          <Route path="/auth/signin" element={<SignInPage />} />
-          <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          
-          {/* Dashboard Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <PortalLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<PortalDashboard />} />
-            <Route path="subscriptions" element={<SubscriptionsPage />} />
-            <Route path="campaigns" element={<CampaignsPage />} />
-            <Route path="assets" element={<AssetsPage />} />
-            <Route path="invoices" element={<InvoicesPage />} />
-            <Route path="tickets" element={<TicketsPage />} />
-            <Route path="notifications" element={<NotificationsPage />} />
-          </Route>
-          
-          {/* Admin Routes */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<AdminDashboard />} />
-            <Route path="analytics" element={<AnalyticsPage />} />
-            <Route path="clients" element={<ClientsPage />} />
-            <Route path="campaigns" element={<AdminCampaignsPage />} />
-            <Route path="assets" element={<AdminAssetsPage />} />
-            <Route path="tickets" element={<AdminTicketsPage />} />
-            <Route path="invoices" element={<AdminInvoicesPage />} />
-            <Route path="notifications" element={<AdminNotificationsPage />} />
-            <Route path="consultation-leads" element={<ConsultationLeadsPage />} />
-            <Route path="ai-conversations" element={<AIConversationsPage />} />
-            <Route path="email-templates" element={<EmailTemplatesPage />} />
-          </Route>
-          
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-        </Suspense>
+        <main id="main-content" tabIndex={-1}>
+          <ErrorBoundary key={routeKey}>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/services" element={<ServicesPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/testimonials" element={<TestimonialsPage />} />
+                <Route path="/portfolio" element={<PortfolioPage />} />
+                <Route path="/blogs" element={<BlogPage />} />
+                <Route path="/blogs/:slug" element={<BlogPostPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/feedback" element={<FeedbackPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/faq" element={<FAQPage />} />
+                <Route path="/legal" element={<LegalPage />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                <Route path="/terms-of-use" element={<TermsOfUsePage />} />
+                <Route path="/nda" element={<NDAPage />} />
+                <Route path="/licensing" element={<LicensingPage />} />
+                <Route path="/accessibility" element={<AccessibilityPage />} />
+                <Route path="/capabilities-deck" element={<CapabilitiesDeckPage />} />
+                <Route path="/demo" element={<DemoPage />} />
+                <Route path="/sitemap" element={<SitemapPage />} />
+
+                {/* Auth Routes */}
+                <Route path="/auth/signup" element={<SignUpPage />} />
+                <Route path="/auth/signin" element={<SignInPage />} />
+                <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+                {/* Dashboard Routes */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <PortalLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<PortalDashboard />} />
+                  <Route path="subscriptions" element={<SubscriptionsPage />} />
+                  <Route path="campaigns" element={<CampaignsPage />} />
+                  <Route path="assets" element={<AssetsPage />} />
+                  <Route path="invoices" element={<InvoicesPage />} />
+                  <Route path="tickets" element={<TicketsPage />} />
+                  <Route path="notifications" element={<NotificationsPage />} />
+                </Route>
+
+                {/* Admin Routes */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute requireAdmin={true}>
+                      <AdminLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="analytics" element={<AnalyticsPage />} />
+                  <Route path="clients" element={<ClientsPage />} />
+                  <Route path="campaigns" element={<AdminCampaignsPage />} />
+                  <Route path="assets" element={<AdminAssetsPage />} />
+                  <Route path="tickets" element={<AdminTicketsPage />} />
+                  <Route path="invoices" element={<AdminInvoicesPage />} />
+                  <Route path="notifications" element={<AdminNotificationsPage />} />
+                  <Route path="consultation-leads" element={<ConsultationLeadsPage />} />
+                  <Route path="ai-conversations" element={<AIConversationsPage />} />
+                  <Route path="email-templates" element={<EmailTemplatesPage />} />
+                </Route>
+
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
+        </main>
         <UnifiedChatWidget />
         <InstallPrompt />
         <OfflineIndicator />

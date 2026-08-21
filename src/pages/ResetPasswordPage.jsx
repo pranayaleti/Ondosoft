@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { API_BASE } from '../utils/apiConfig.js';
 import SEOHead from '../components/SEOHead';
@@ -19,6 +19,7 @@ const ResetPasswordPage = () => {
   const [loading, setLoading] = useState(false);
   const [validatingToken, setValidatingToken] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
+  const redirectTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (!token) {
@@ -31,6 +32,12 @@ const ResetPasswordPage = () => {
       setTokenValid(true);
     }
   }, [token]);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) clearTimeout(redirectTimeoutRef.current);
+    };
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -80,7 +87,7 @@ const ResetPasswordPage = () => {
       }
 
       setSuccess(true);
-      setTimeout(() => {
+      redirectTimeoutRef.current = setTimeout(() => {
         navigate('/auth/signin');
       }, 3000);
     } catch (err) {
@@ -93,7 +100,7 @@ const ResetPasswordPage = () => {
   if (validatingToken) {
     return (
       <>
-        <SEOHead title="Reset Password" />
+        <SEOHead title="Reset Password | Ondosoft" noIndex={true} />
         <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 flex items-center justify-center p-4">
           <div className="text-center">
             <Loader className="w-12 h-12 animate-spin text-orange-500 mx-auto mb-4" />
@@ -107,7 +114,7 @@ const ResetPasswordPage = () => {
   if (!tokenValid) {
     return (
       <>
-        <SEOHead title="Reset Password" />
+        <SEOHead title="Reset Password | Ondosoft" noIndex={true} />
         <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700">
             <div className="text-center mb-6">
@@ -133,7 +140,7 @@ const ResetPasswordPage = () => {
   if (success) {
     return (
       <>
-        <SEOHead title="Password Reset Successful" />
+        <SEOHead title="Password Reset Successful | Ondosoft" noIndex={true} />
         <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700">
             <div className="text-center">
@@ -158,7 +165,7 @@ const ResetPasswordPage = () => {
 
   return (
     <>
-      <SEOHead title="Reset Password" />
+      <SEOHead title="Reset Password | Ondosoft" noIndex={true} />
       <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700">
           <div className="text-center mb-8">

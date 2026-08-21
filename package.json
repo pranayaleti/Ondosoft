@@ -10,9 +10,12 @@
     "dev": "vite",
     "dev:backend": "cd backend && node index.js",
     "dev:all": "./start-dev.sh",
+    "prebuild": "node scripts/generate-sitemap.mjs",
     "build": "vite build",
+    "postbuild": "node scripts/prerender-routes.mjs",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
+    "sitemap": "node scripts/generate-sitemap.mjs",
     "optimize:logo": "node optimize-logo.js"
   },
   "dependencies": {

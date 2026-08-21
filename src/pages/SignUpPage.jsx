@@ -122,8 +122,9 @@ const SignUpPage = () => {
   return (
     <>
       <SEOHead
-        title="Sign Up - OndoSoft"
-        description="Create your account to access the dashboard and manage your campaigns"
+        title="Sign Up | Ondosoft"
+        description="Create your Ondosoft account to access the client dashboard."
+        noIndex={true}
       />
       <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">

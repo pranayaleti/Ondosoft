@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Bell } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { portalAPI, adminAPI } from '../utils/auth.js';
@@ -9,37 +9,62 @@ const NotificationCenter = () => {
   const location = useLocation();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    if (user) {
-      fetchNotifications();
-      // Poll for new notifications every 30 seconds
-      const interval = setInterval(fetchNotifications, 30000);
-      return () => clearInterval(interval);
-    }
+    isMountedRef.current = true;
+    if (!user) return undefined;
+
+    fetchNotifications();
+    // Pause polling when the tab is hidden so we don't burn requests / battery.
+    let interval = null;
+    const startInterval = () => {
+      if (interval) return;
+      interval = setInterval(fetchNotifications, 30000);
+    };
+    const stopInterval = () => {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+
+    startInterval();
+    const onVisibility = () => {
+      if (document.hidden) stopInterval();
+      else {
+        fetchNotifications();
+        startInterval();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      isMountedRef.current = false;
+      stopInterval();
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isAdmin]);
 
   const fetchNotifications = async () => {
+    if (isMountedRef.current) setLoading(true);
     try {
-      setLoading(true);
-      const data = isAdmin 
+      const data = isAdmin
         ? await adminAPI.getNotifications()
         : await portalAPI.getNotifications();
-      // Filter out dismissed notifications and those with future remind_at dates
+      if (!isMountedRef.current) return;
       const now = new Date();
-      const filtered = (data.notifications || []).filter(n => {
+      const filtered = (data.notifications || []).filter((n) => {
         if (n.is_dismissed) return false;
-        if (n.remind_at) {
-          const remindDate = new Date(n.remind_at);
-          return remindDate <= now;
-        }
+        if (n.remind_at) return new Date(n.remind_at) <= now;
         return true;
       });
       setNotifications(filtered);
     } catch (err) {
-      console.error('Failed to fetch notifications:', err);
+      if (isMountedRef.current) console.error('Failed to fetch notifications:', err);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
     }
   };
 

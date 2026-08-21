@@ -1,15 +1,15 @@
 import { useEffect } from 'react';
 
 const PerformanceMonitor = () => {
-  // #region agent log
   useEffect(() => {
-    // Store observers for cleanup
     let lcpObserver = null;
     let fidObserver = null;
     let clsObserver = null;
     let fcpObserver = null;
     let loadHandler1 = null;
     let loadHandler2 = null;
+    let resourceTimeoutId = null;
+    let navigationTimeoutId = null;
 
     // Initialize performance monitoring
     const initPerformanceMonitoring = () => {
@@ -125,9 +125,8 @@ const PerformanceMonitor = () => {
         }
       };
 
-      // Monitor after page load
       loadHandler1 = () => {
-        setTimeout(monitorResourceTiming, 1000);
+        resourceTimeoutId = setTimeout(monitorResourceTiming, 1000);
       };
       window.addEventListener('load', loadHandler1);
 
@@ -155,24 +154,21 @@ const PerformanceMonitor = () => {
         }
       };
 
-      // Run navigation timing after load
       loadHandler2 = () => {
-        setTimeout(navigationTiming, 100);
+        navigationTimeoutId = setTimeout(navigationTiming, 100);
       };
       window.addEventListener('load', loadHandler2);
     };
 
-    // Initialize performance monitoring
     initPerformanceMonitoring();
 
-    // Cleanup function
     return () => {
-      // Cleanup load event listeners
       if (typeof window !== 'undefined') {
-        window.removeEventListener('load', loadHandler1);
-        window.removeEventListener('load', loadHandler2);
+        if (loadHandler1) window.removeEventListener('load', loadHandler1);
+        if (loadHandler2) window.removeEventListener('load', loadHandler2);
       }
-      // Disconnect observers if they exist
+      if (resourceTimeoutId) clearTimeout(resourceTimeoutId);
+      if (navigationTimeoutId) clearTimeout(navigationTimeoutId);
       if (lcpObserver) lcpObserver.disconnect();
       if (fidObserver) fidObserver.disconnect();
       if (clsObserver) clsObserver.disconnect();

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { portalAPI } from '../../utils/auth.js';
+import { useAbortableEffect, isAbortError } from '../../hooks/useAbortableEffect';
 import { API_URL } from '../../utils/apiConfig.js';
 import { FileText, Download, Eye, Loader, AlertCircle, DollarSign, Calendar, CheckCircle, XCircle, Clock, Plus, Trash2, X } from 'lucide-react';
 import SEOHead from '../../components/SEOHead';
@@ -25,17 +26,18 @@ const InvoicesPage = () => {
   });
   const [itemForm, setItemForm] = useState({ description: '', quantity: '1', price: '' });
 
-  useEffect(() => {
-    fetchInvoices();
+  useAbortableEffect((signal) => {
+    fetchInvoices(signal);
   }, []);
 
-  const fetchInvoices = async () => {
+  const fetchInvoices = async (signal) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await portalAPI.getInvoices();
+      const data = await portalAPI.getInvoices({ signal });
       setInvoices(data.invoices || []);
     } catch (err) {
+      if (isAbortError(err)) return;
       setError(err.message);
     } finally {
       setLoading(false);

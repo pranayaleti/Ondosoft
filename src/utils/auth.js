@@ -51,20 +51,22 @@ const getAuthHeaders = (customHeaders = {}) => {
 // Helper function to make authenticated fetch requests
 const authenticatedFetch = async (url, options = {}) => {
   const headers = getAuthHeaders(options.headers);
-  
-  const response = await fetch(url, {
-    ...options,
-    headers,
-    credentials: 'include',
-  });
-  
-  // If 401, remove token as it's invalid
-  // Don't redirect here - let the calling code handle it
-  if (response.status === 401) {
-    tokenStorage.remove();
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include',
+    });
+
+    if (response.status === 401) {
+      tokenStorage.remove();
+    }
+
+    return response;
+  } catch (error) {
+    throw error;
   }
-  
-  return response;
 };
 
 // Auth API functions
@@ -267,7 +269,7 @@ export const authAPI = {
     }
   },
 
-  async getSession() {
+  async getSession(options = {}) {
     try {
       // Don't check session if there's no token
       const token = tokenStorage.get();
@@ -320,7 +322,7 @@ export const authAPI = {
     }
   },
 
-  async getNotifications() {
+  async getNotifications(options = {}) {
     const response = await fetch(`${API_URL}/admin/notifications`, {
       headers: getAuthHeaders(),
       credentials: 'include',
@@ -379,11 +381,12 @@ export const authAPI = {
 
 // Portal API functions
 export const portalAPI = {
-  async getDashboard() {
+  async getDashboard(options = {}) {
     try {
       const response = await authenticatedFetch(`${API_URL}/dashboard/dashboard`, {
         method: 'GET',
-      });
+      ...options,
+    });
 
       if (!response.ok) {
         let errorMessage = 'Failed to fetch dashboard data';
@@ -425,9 +428,10 @@ export const portalAPI = {
     }
   },
 
-  async getSubscriptions() {
+  async getSubscriptions(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/dashboard/subscriptions`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -477,9 +481,10 @@ export const portalAPI = {
     return response.json();
   },
 
-  async getCampaigns() {
+  async getCampaigns(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/dashboard/campaigns`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -506,9 +511,10 @@ export const portalAPI = {
     return response.json();
   },
 
-  async getEmailTemplates() {
+  async getEmailTemplates(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/email-templates`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -518,9 +524,10 @@ export const portalAPI = {
     return response.json();
   },
 
-  async getEmailTemplate(templateId) {
+  async getEmailTemplate(templateId, options = {}) {
     const response = await authenticatedFetch(`${API_URL}/email-templates/${templateId}`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -545,9 +552,10 @@ export const portalAPI = {
     return response.json();
   },
 
-  async getAssets() {
+  async getAssets(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/dashboard/assets`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -557,9 +565,10 @@ export const portalAPI = {
     return response.json();
   },
 
-  async getInvoices() {
+  async getInvoices(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/dashboard/invoices`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -569,9 +578,10 @@ export const portalAPI = {
     return response.json();
   },
 
-  async getInvoice(invoiceId) {
+  async getInvoice(invoiceId, options = {}) {
     const response = await authenticatedFetch(`${API_URL}/dashboard/invoices/${invoiceId}`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -641,9 +651,10 @@ export const portalAPI = {
     }
   },
 
-  async getNotifications() {
+  async getNotifications(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/dashboard/notifications`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -703,7 +714,7 @@ export const portalAPI = {
   },
 
   /** Get VAPID public key for push subscription (no auth). */
-  async getVapidPublicKey() {
+  async getVapidPublicKey(options = {}) {
     const response = await fetch(`${API_URL}/vapid-public-key`, { credentials: 'include' });
     if (!response.ok) return null;
     const data = await response.json();
@@ -736,10 +747,11 @@ export const portalAPI = {
 
 // Admin API functions
 export const adminAPI = {
-  async getDashboard() {
+  async getDashboard(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/dashboard`, {
       method: 'GET',
       cache: 'no-store',
+      ...options,
     });
 
     if (!response.ok) {
@@ -753,10 +765,11 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getUsers() {
+  async getUsers(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/users`, {
       method: 'GET',
       cache: 'no-store', // Prevent caching
+      ...options,
     });
 
     if (!response.ok) {
@@ -788,10 +801,11 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getCampaigns() {
+  async getCampaigns(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/campaigns`, {
       method: 'GET',
       cache: 'no-store',
+      ...options,
     });
 
     if (!response.ok) {
@@ -822,9 +836,10 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getEmailTemplates() {
+  async getEmailTemplates(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/email-templates`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -834,9 +849,10 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getEmailTemplate(templateId) {
+  async getEmailTemplate(templateId, options = {}) {
     const response = await authenticatedFetch(`${API_URL}/email-templates/${templateId}`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -861,10 +877,11 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getEmailTemplatesAdmin() {
+  async getEmailTemplatesAdmin(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/email-templates`, {
       method: 'GET',
       cache: 'no-store',
+      ...options,
     });
 
     if (!response.ok) {
@@ -925,10 +942,11 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getAnalytics() {
+  async getAnalytics(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/analytics`, {
       method: 'GET',
       cache: 'no-store',
+      ...options,
     });
 
     if (!response.ok) {
@@ -942,10 +960,11 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getRequestAnalytics() {
+  async getRequestAnalytics(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/request-analytics`, {
       method: 'GET',
       cache: 'no-store',
+      ...options,
     });
 
     if (!response.ok) {
@@ -959,10 +978,11 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getUserAnalytics() {
+  async getUserAnalytics(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/user-analytics`, {
       method: 'GET',
       cache: 'no-store',
+      ...options,
     });
 
     if (!response.ok) {
@@ -990,10 +1010,11 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getInvoices() {
+  async getInvoices(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/invoices`, {
       method: 'GET',
       cache: 'no-store', // Prevent caching
+      ...options,
     });
 
     if (!response.ok) {
@@ -1008,10 +1029,11 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getAssets() {
+  async getAssets(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/assets`, {
       method: 'GET',
       cache: 'no-store',
+      ...options,
     });
 
     if (!response.ok) {
@@ -1042,10 +1064,11 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getInvoice(invoiceId) {
+  async getInvoice(invoiceId, options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/invoices/${invoiceId}`, {
       method: 'GET',
       cache: 'no-store',
+      ...options,
     });
 
     if (!response.ok) {
@@ -1097,9 +1120,10 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getNotifications() {
+  async getNotifications(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/notifications`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -1133,7 +1157,7 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getConsultationLeads(status = null, limit = 100, offset = 0) {
+  async getConsultationLeads(status = null, limit = 100, offset = 0, options = {}) {
     const params = new URLSearchParams();
     if (status) params.append('status', status);
     params.append('limit', limit);
@@ -1141,6 +1165,7 @@ export const adminAPI = {
 
     const response = await authenticatedFetch(`${API_URL}/admin/consultation-leads?${params.toString()}`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -1164,7 +1189,7 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getAIConversations(status = null, limit = 100, offset = 0, search = null) {
+  async getAIConversations(status = null, limit = 100, offset = 0, search = null, options = {}) {
     const params = new URLSearchParams();
     if (status) params.append('status', status);
     params.append('limit', limit);
@@ -1173,6 +1198,7 @@ export const adminAPI = {
 
     const response = await authenticatedFetch(`${API_URL}/admin/ai-conversations?${params.toString()}`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -1182,9 +1208,10 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getAIConversation(conversationId) {
+  async getAIConversation(conversationId, options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/ai-conversations/${conversationId}`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -1208,9 +1235,10 @@ export const adminAPI = {
     return response.json();
   },
 
-  async getAIConversationsAnalytics() {
+  async getAIConversationsAnalytics(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/ai-conversations-analytics`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -1244,9 +1272,10 @@ export const ticketAPI = {
     return response.json();
   },
 
-  async getAssignees() {
+  async getAssignees(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/dashboard/tickets/assignees`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -1257,9 +1286,10 @@ export const ticketAPI = {
     return response.json();
   },
 
-  async getTickets() {
+  async getTickets(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/dashboard/tickets`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -1270,9 +1300,10 @@ export const ticketAPI = {
     return response.json();
   },
 
-  async getTicket(id) {
+  async getTicket(id, options = {}) {
     const response = await authenticatedFetch(`${API_URL}/dashboard/tickets/${id}`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -1316,9 +1347,10 @@ export const ticketAPI = {
     return response.json();
   },
 
-  async getNotifications() {
+  async getNotifications(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/notifications`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -1380,9 +1412,10 @@ export const ticketAPI = {
 
 // Admin ticket API functions
 export const adminTicketAPI = {
-  async getTickets() {
+  async getTickets(options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/tickets`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {
@@ -1392,9 +1425,10 @@ export const adminTicketAPI = {
     return response.json();
   },
 
-  async getTicket(id) {
+  async getTicket(id, options = {}) {
     const response = await authenticatedFetch(`${API_URL}/admin/tickets/${id}`, {
       method: 'GET',
+      ...options,
     });
 
     if (!response.ok) {

@@ -54,8 +54,9 @@ export const isValidEmail = (email) => {
 
 // Phone number validation
 export const isValidPhone = (phone) => {
-  const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-  return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''));
+  const digits = String(phone || '').replace(/[\s\-()]/g, '');
+  const phoneRegex = /^[+]?[1-9][\d]{0,15}$/;
+  return phoneRegex.test(digits);
 };
 
 // Format phone number as (XXX) XXX-XXXX
@@ -115,62 +116,70 @@ export const escapeHtml = (text) => {
   return text.replace(/[&<>"']/g, m => map[m]);
 };
 
-// Sanitize HTML for dangerouslySetInnerHTML usage
-// This is a basic sanitizer - for production, consider using DOMPurify
+const ALLOWED_TAGS = new Set([
+  'span', 'p', 'div', 'strong', 'em', 'b', 'i', 'u', 'br',
+  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  'ul', 'ol', 'li', 'a', 'code', 'pre', 'blockquote',
+]);
+const ALLOWED_ATTRS = new Set(['class', 'id', 'href', 'target', 'rel', 'title']);
+const SAFE_URL = /^(https?:|mailto:|tel:|\/|#)/i;
+
+/**
+ * Whitelist-based HTML sanitizer for `dangerouslySetInnerHTML`.
+ *
+ * Uses DOMParser to walk the tree instead of regex-first escaping (the
+ * previous implementation escaped everything, so no markup ever rendered).
+ * For richer needs prefer DOMPurify — this covers the small set of tags
+ * emitted by the in-repo markdown renderer.
+ */
 export const sanitizeHtml = (html) => {
   if (typeof html !== 'string') return '';
-  
-  // First escape all HTML entities
-  let sanitized = escapeHtml(html);
-  
-  // Then allow only safe HTML tags and attributes
-  // Remove all script tags and event handlers
-  sanitized = sanitized
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-    .replace(/on\w+\s*=\s*[^\s>]*/gi, '')
-    .replace(/javascript:/gi, '')
-    .replace(/data:text\/html/gi, '')
-    .replace(/vbscript:/gi, '')
-    .replace(/data:/gi, '')
-    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
-    .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '');
-  
-  // Allow only safe HTML tags: span, p, div, strong, em, b, i, u, br, h1-h6, ul, ol, li, a (with safe href)
-  const allowedTags = ['span', 'p', 'div', 'strong', 'em', 'b', 'i', 'u', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a'];
-  const allowedAttributes = ['class', 'id', 'href', 'target', 'rel'];
-  
-  // Remove any tags not in whitelist
-  sanitized = sanitized.replace(/<(\/?)([^>]+)>/g, (match, closing, tagContent) => {
-    const tagName = tagContent.split(/\s/)[0].toLowerCase();
-    if (allowedTags.includes(tagName)) {
-      // Remove dangerous attributes
-      let safeTag = tagContent.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '');
-      safeTag = safeTag.replace(/\s*on\w+\s*=\s*[^\s>]*/gi, '');
-      // Only allow safe attributes
-      const attrRegex = /(\w+)\s*=\s*["']([^"']*)["']/g;
-      let safeAttrs = '';
-      let attrMatch;
-      while ((attrMatch = attrRegex.exec(tagContent)) !== null) {
-        if (allowedAttributes.includes(attrMatch[1].toLowerCase())) {
-          // Additional check for href - only allow http/https
-          if (attrMatch[1].toLowerCase() === 'href') {
-            const href = attrMatch[2];
-            if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('/') || href.startsWith('#')) {
-              safeAttrs += ` ${attrMatch[1]}="${escapeHtml(attrMatch[2])}"`;
-            }
-          } else {
-            safeAttrs += ` ${attrMatch[1]}="${escapeHtml(attrMatch[2])}"`;
-          }
+  if (typeof window === 'undefined' || typeof DOMParser === 'undefined') return '';
+
+  const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html');
+  const root = doc.body.firstChild;
+  if (!root) return '';
+
+  const walk = (node) => {
+    for (const child of Array.from(node.childNodes)) {
+      if (child.nodeType === Node.TEXT_NODE) continue;
+      if (child.nodeType !== Node.ELEMENT_NODE) {
+        child.remove();
+        continue;
+      }
+      const tag = child.tagName.toLowerCase();
+      if (!ALLOWED_TAGS.has(tag)) {
+        // Unwrap: keep children, drop the disallowed element itself.
+        while (child.firstChild) node.insertBefore(child.firstChild, child);
+        child.remove();
+        continue;
+      }
+
+      for (const attr of Array.from(child.attributes)) {
+        const name = attr.name.toLowerCase();
+        if (name.startsWith('on') || !ALLOWED_ATTRS.has(name)) {
+          child.removeAttribute(attr.name);
+          continue;
+        }
+        if (name === 'href' && !SAFE_URL.test(attr.value.trim())) {
+          child.removeAttribute(attr.name);
+          continue;
+        }
+        if (name === 'target' && attr.value === '_blank') {
+          // Enforce safe rel to prevent tabnabbing.
+          const rel = (child.getAttribute('rel') || '').split(/\s+/).filter(Boolean);
+          if (!rel.includes('noopener')) rel.push('noopener');
+          if (!rel.includes('noreferrer')) rel.push('noreferrer');
+          child.setAttribute('rel', rel.join(' '));
         }
       }
-      return `<${closing}${tagName}${safeAttrs}>`;
+
+      walk(child);
     }
-    return ''; // Remove disallowed tags
-  });
-  
-  return sanitized;
+  };
+
+  walk(root);
+  return root.innerHTML;
 };
 
 // Security headers for meta tags

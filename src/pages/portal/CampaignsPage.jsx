@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { portalAPI } from '../../utils/auth.js';
+import { useAbortableEffect, isAbortError } from '../../hooks/useAbortableEffect';
 import { Megaphone, Loader, Plus, X, Eye } from 'lucide-react';
 import SEOHead from '../../components/SEOHead';
 import EmailTemplatePreview from '../../components/EmailTemplatePreview';
@@ -20,26 +21,28 @@ const CampaignsPage = () => {
   const [previewTemplateId, setPreviewTemplateId] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  useEffect(() => {
-    fetchCampaigns();
-    fetchEmailTemplates();
+  useAbortableEffect((signal) => {
+    fetchCampaigns(signal);
+    fetchEmailTemplates(signal);
   }, []);
 
-  const fetchEmailTemplates = async () => {
+  const fetchEmailTemplates = async (signal) => {
     try {
-      const data = await portalAPI.getEmailTemplates();
+      const data = await portalAPI.getEmailTemplates({ signal });
       setEmailTemplates(data.templates || []);
     } catch (err) {
+      if (isAbortError(err)) return;
       console.error('Error fetching email templates:', err);
     }
   };
 
-  const fetchCampaigns = async () => {
+  const fetchCampaigns = async (signal) => {
     try {
       setLoading(true);
-      const data = await portalAPI.getCampaigns();
+      const data = await portalAPI.getCampaigns({ signal });
       setCampaigns(data.campaigns);
     } catch (err) {
+      if (isAbortError(err)) return;
       setError(err.message);
     } finally {
       setLoading(false);

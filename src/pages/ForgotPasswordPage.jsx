@@ -55,7 +55,7 @@ const ForgotPasswordPage = () => {
 
   return (
     <>
-      <SEOHead title="Forgot Password" />
+      <SEOHead title="Forgot Password | Ondosoft" noIndex={true} />
       <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700">
           {success ? (

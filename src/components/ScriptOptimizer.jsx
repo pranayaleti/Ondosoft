@@ -1,8 +1,15 @@
 import { useEffect } from 'react';
 
 const ScriptOptimizer = () => {
-  // #region agent log
   useEffect(() => {
+    // Handles / timers that we need to clean up if the component unmounts before
+    // the third-party scripts have loaded. The scripts themselves stay in the
+    // document once injected because that is the whole point (analytics, GTM,
+    // etc. are meant to live for the app's lifetime).
+    let interactionObserver = null;
+    let interactionTimeoutId = null;
+    let loadTimeoutId = null;
+    let loadHandler = null;
     // Load analytics with lazyOnload strategy (only if configured)
     const loadAnalytics = () => {
       const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
@@ -123,60 +130,49 @@ const ScriptOptimizer = () => {
       }
     };
 
-    // Load scripts with intersection observer for better performance
     const loadScriptsOnInteraction = () => {
-      const observer = new IntersectionObserver((entries) => {
+      interactionObserver = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            // Load analytics after user interaction
             loadAnalytics();
-            observer.disconnect();
+            interactionObserver.disconnect();
+            interactionObserver = null;
           }
         });
       }, {
         rootMargin: '50px',
-        threshold: 0.1
+        threshold: 0.1,
       });
 
-      // Observe the main content area
       const mainContent = document.querySelector('main') || document.body;
       if (mainContent) {
-        observer.observe(mainContent);
+        interactionObserver.observe(mainContent);
       }
     };
 
-    // Fonts are now loaded in index.html for better performance
-    // No need to load fonts here as they're already in the HTML head
-
-    // Initialize script loading (fonts already loaded in HTML)
-    
-    // Load analytics scripts after user interaction
-    setTimeout(() => {
+    interactionTimeoutId = setTimeout(() => {
       loadScriptsOnInteraction();
     }, 1000);
 
-    // Load non-critical scripts after page load
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        // Only load these in production
+    loadHandler = () => {
+      loadTimeoutId = setTimeout(() => {
         if (import.meta.env.PROD) {
-          // Only load GTM if configured (check for actual GTM ID)
           const gtmId = import.meta.env.VITE_GTM_ID;
           if (gtmId && gtmId !== 'GTM-XXXXXXX' && gtmId.trim() !== '') {
             loadGTM();
           }
-          loadFacebookPixel(); // Will only load if configured
-          loadHotjar(); // Will only load if configured
+          loadFacebookPixel();
+          loadHotjar();
         }
       }, 2000);
-    });
+    };
+    window.addEventListener('load', loadHandler);
 
-    // Cleanup function
     return () => {
-      // Cleanup if needed
-      if (import.meta.env.DEV) {
-        console.log('Script optimizer cleanup');
-      }
+      if (interactionTimeoutId) clearTimeout(interactionTimeoutId);
+      if (loadTimeoutId) clearTimeout(loadTimeoutId);
+      if (loadHandler) window.removeEventListener('load', loadHandler);
+      if (interactionObserver) interactionObserver.disconnect();
     };
   }, []);
 

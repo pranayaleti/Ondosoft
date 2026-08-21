@@ -1,4 +1,5 @@
 import { Shield, Award, Clock, Users, TrendingUp, CheckCircle, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import techstartDashboard from '../assets/portfolio/techstart-dashboard.jpg';
 
 const TrustBadges = () => {
@@ -128,13 +129,13 @@ const TrustBadges = () => {
                 </div>
               </blockquote>
 
-              <a 
-                href="/contact" 
+              <Link
+                to="/contact"
                 className="inline-flex items-center bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors border border-orange-400 shadow-lg"
               >
                 Scale Your Venture
                 <TrendingUp className="h-5 w-5 ml-2" />
-              </a>
+              </Link>
             </div>
 
             {/* Visual Elements */}

@@ -1,8 +1,17 @@
 // Comprehensive Analytics Tracking Utility
 // Tracks clicks, navigation, user interactions, and other relevant metrics
 
-// Import centralized API configuration
 import { API_URL } from './apiConfig';
+
+// Cap how many session-summary events we retain in memory. Actual events still
+// stream to the server; this only bounds the in-memory summary arrays so a long
+// SPA session cannot grow unbounded.
+const MAX_SESSION_EVENTS = 200;
+
+const pushCapped = (arr, item) => {
+  arr.push(item);
+  if (arr.length > MAX_SESSION_EVENTS) arr.shift();
+};
 
 class AnalyticsTracker {
   constructor() {
@@ -17,12 +26,18 @@ class AnalyticsTracker {
     this.currentPage = null;
     this.pageStartTime = null;
     this.lastActivityTime = Date.now();
-    
+
     // Batch tracking to reduce API calls
     this.batchSize = 10;
     this.batchTimeout = 5000; // 5 seconds
     this.pendingEvents = [];
     this.batchTimer = null;
+
+    // Named listener refs so cleanup() can actually remove them
+    this.handlers = {};
+    this.scrollTimeoutId = null;
+    this.originalPushState = null;
+    this.originalReplaceState = null;
   }
 
   generateSessionId() {
@@ -32,38 +47,32 @@ class AnalyticsTracker {
   init() {
     if (this.initialized) return;
     this.initialized = true;
-    
-    // Set up event listeners first (non-blocking)
+
     this.setupClickTracking();
     this.setupNavigationTracking();
     this.setupScrollTracking();
     this.setupFormTracking();
     this.setupVisibilityTracking();
     this.setupErrorTracking();
-    
-    // Track page unload - Use pagehide instead of beforeunload for better cache support
-    // beforeunload prevents back/forward cache restoration
-    this.pageHideHandler = () => {
+
+    this.handlers.pageHide = () => {
       this.trackPageExit();
-      this.flushBatch(); // Flush any pending events
+      this.flushBatch();
     };
-    // Use pagehide instead of beforeunload to allow bfcache
-    window.addEventListener('pagehide', this.pageHideHandler);
-    // On bfcache restore (back/forward), re-track page view and report bfcache for performance metrics
-    this.pageshowHandler = (event) => {
+    window.addEventListener('pagehide', this.handlers.pageHide);
+
+    this.handlers.pageShow = (event) => {
       if (event.persisted) {
         this.trackPageView(window.location.pathname);
         this.trackUserInteraction('bfcache_restore', { pathname: window.location.pathname });
       }
     };
-    window.addEventListener('pageshow', this.pageshowHandler);
-    
-    // Defer initial page view tracking to avoid blocking critical path
-    // Use requestIdleCallback or setTimeout to ensure non-blocking
+    window.addEventListener('pageshow', this.handlers.pageShow);
+
     const trackInitialPageView = () => {
       this.trackPageView(window.location.pathname);
     };
-    
+
     if ('requestIdleCallback' in window) {
       requestIdleCallback(trackInitialPageView, { timeout: 2000 });
     } else {
@@ -71,44 +80,49 @@ class AnalyticsTracker {
     }
   }
 
-  // Cleanup method to remove event listeners
+  // Remove every listener we own so the singleton can be safely torn down.
   cleanup() {
     if (!this.initialized) return;
-    
-    // Remove pagehide listener
-    if (this.pageHideHandler) {
-      window.removeEventListener('pagehide', this.pageHideHandler);
-      this.pageHideHandler = null;
-    }
-    if (this.pageshowHandler) {
-      window.removeEventListener('pageshow', this.pageshowHandler);
-      this.pageshowHandler = null;
-    }
-    
-    // Remove popstate listener
-    if (this.popstateHandler) {
-      window.removeEventListener('popstate', this.popstateHandler);
-      this.popstateHandler = null;
-    }
-    
-    // Restore original history methods
+
+    const { pageHide, pageShow, popstate, click, scroll, focus, blur, change, submit,
+      visibility, error, rejection } = this.handlers;
+
+    if (pageHide) window.removeEventListener('pagehide', pageHide);
+    if (pageShow) window.removeEventListener('pageshow', pageShow);
+    if (popstate) window.removeEventListener('popstate', popstate);
+    if (click) document.removeEventListener('click', click, true);
+    if (scroll) window.removeEventListener('scroll', scroll);
+    if (focus) document.removeEventListener('focus', focus, true);
+    if (blur) document.removeEventListener('blur', blur, true);
+    if (change) document.removeEventListener('change', change, true);
+    if (submit) document.removeEventListener('submit', submit, true);
+    if (visibility) document.removeEventListener('visibilitychange', visibility);
+    if (error) window.removeEventListener('error', error);
+    if (rejection) window.removeEventListener('unhandledrejection', rejection);
+
+    this.handlers = {};
+
     if (this.originalPushState) {
       history.pushState = this.originalPushState;
+      this.originalPushState = null;
     }
     if (this.originalReplaceState) {
       history.replaceState = this.originalReplaceState;
+      this.originalReplaceState = null;
     }
-    
-    // Clear batch timer
+
     if (this.batchTimer) {
       clearTimeout(this.batchTimer);
       this.batchTimer = null;
     }
-    
+    if (this.scrollTimeoutId) {
+      clearTimeout(this.scrollTimeoutId);
+      this.scrollTimeoutId = null;
+    }
+
     this.initialized = false;
   }
 
-  // Track page views
   trackPageView(pathname) {
     const pageView = {
       sessionId: this.sessionId,
@@ -123,17 +137,16 @@ class AnalyticsTracker {
       language: navigator.language,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       pageLoadTime: performance.timing ? performance.timing.loadEventEnd - performance.timing.navigationStart : null,
-      type: 'page_view'
+      type: 'page_view',
     };
-    
-    this.pageViews.push(pageView);
+
+    pushCapped(this.pageViews, pageView);
     this.currentPage = pathname || window.location.pathname;
     this.pageStartTime = Date.now();
-    
+
     this.sendEvent('page_view', pageView);
   }
 
-  // Track clicks
   trackClick(element, event) {
     const clickData = {
       sessionId: this.sessionId,
@@ -151,122 +164,112 @@ class AnalyticsTracker {
       shiftKey: event.shiftKey,
       altKey: event.altKey,
       metaKey: event.metaKey,
-      type: 'click'
+      type: 'click',
     };
-    
-    this.clicks.push(clickData);
+
+    pushCapped(this.clicks, clickData);
     this.addToBatch('click', clickData);
   }
 
-  // Track navigation events
   trackNavigation(from, to, method = 'link') {
     const navigationData = {
       sessionId: this.sessionId,
-      from: from,
-      to: to,
-      method: method, // 'link', 'back', 'forward', 'direct', 'programmatic'
+      from,
+      to,
+      method,
       timestamp: new Date().toISOString(),
       timeOnPage: this.pageStartTime ? Date.now() - this.pageStartTime : null,
-      type: 'navigation'
+      type: 'navigation',
     };
-    
-    this.navigationEvents.push(navigationData);
+
+    pushCapped(this.navigationEvents, navigationData);
     this.sendEvent('navigation', navigationData);
   }
 
-  // Track scroll events
   trackScroll(depth, timeOnPage) {
     const scrollData = {
       sessionId: this.sessionId,
       pathname: window.location.pathname,
-      scrollDepth: depth, // percentage
-      timeOnPage: timeOnPage,
+      scrollDepth: depth,
+      timeOnPage,
       timestamp: new Date().toISOString(),
-      type: 'scroll'
+      type: 'scroll',
     };
-    
-    this.scrollEvents.push(scrollData);
+
+    pushCapped(this.scrollEvents, scrollData);
     this.addToBatch('scroll', scrollData);
   }
 
-  // Track form interactions
   trackFormInteraction(formId, action, fieldName = null) {
     const formData = {
       sessionId: this.sessionId,
       pathname: window.location.pathname,
-      formId: formId,
-      action: action, // 'focus', 'blur', 'change', 'submit'
-      fieldName: fieldName,
+      formId,
+      action,
+      fieldName,
       timestamp: new Date().toISOString(),
-      type: 'form_interaction'
+      type: 'form_interaction',
     };
-    
-    this.formInteractions.push(formData);
+
+    pushCapped(this.formInteractions, formData);
     this.addToBatch('form_interaction', formData);
   }
 
-  // Track user interactions
   trackUserInteraction(interactionType, details = {}) {
     const interactionData = {
       sessionId: this.sessionId,
       pathname: window.location.pathname,
-      interactionType: interactionType, // 'button_click', 'link_click', 'form_submit', 'search', etc.
-      details: details,
+      interactionType,
+      details,
       timestamp: new Date().toISOString(),
-      type: 'user_interaction'
+      type: 'user_interaction',
     };
-    
-    this.userInteractions.push(interactionData);
+
+    pushCapped(this.userInteractions, interactionData);
     this.addToBatch('user_interaction', interactionData);
   }
 
-  // Track page exit
   trackPageExit() {
     if (!this.currentPage || !this.pageStartTime) return;
-    
+
     const exitData = {
       sessionId: this.sessionId,
       pathname: this.currentPage,
       timeOnPage: Date.now() - this.pageStartTime,
       timestamp: new Date().toISOString(),
-      type: 'page_exit'
+      type: 'page_exit',
     };
-    
-    // Send immediately on exit
+
     this.sendEvent('page_exit', exitData, true);
   }
 
-  // Setup click tracking
   setupClickTracking() {
-    document.addEventListener('click', (event) => {
+    this.handlers.click = (event) => {
       const element = event.target;
-      
-      // Track all clicks
+
       this.trackClick(element, event);
-      
-      // Track specific interaction types
+
       if (element.tagName === 'A' || element.closest('a')) {
         const link = element.tagName === 'A' ? element : element.closest('a');
         this.trackUserInteraction('link_click', {
           href: link.href,
-          text: link.textContent?.trim().substring(0, 100)
+          text: link.textContent?.trim().substring(0, 100),
         });
       } else if (element.tagName === 'BUTTON' || element.closest('button')) {
         const button = element.tagName === 'BUTTON' ? element : element.closest('button');
         this.trackUserInteraction('button_click', {
           buttonId: button.id,
           buttonText: button.textContent?.trim().substring(0, 100),
-          buttonClass: button.className
+          buttonClass: button.className,
         });
       }
-    }, true);
+    };
+    document.addEventListener('click', this.handlers.click, true);
   }
 
-  // Setup navigation tracking
   setupNavigationTracking() {
-    // Track history changes (SPA navigation)
     let lastPath = window.location.pathname;
-    
+
     const trackPathChange = () => {
       const currentPath = window.location.pathname;
       if (currentPath !== lastPath) {
@@ -275,141 +278,128 @@ class AnalyticsTracker {
         lastPath = currentPath;
       }
     };
-    
-    // Store original methods for cleanup
+
     this.originalPushState = history.pushState;
     this.originalReplaceState = history.replaceState;
-    
-    // Override pushState and replaceState
-    history.pushState = function(...args) {
-      this.originalPushState.apply(history, args);
+
+    const self = this;
+    history.pushState = function pushStateOverride(...args) {
+      self.originalPushState.apply(history, args);
       trackPathChange();
-    }.bind(this);
-    
-    history.replaceState = function(...args) {
-      this.originalReplaceState.apply(history, args);
+    };
+    history.replaceState = function replaceStateOverride(...args) {
+      self.originalReplaceState.apply(history, args);
       trackPathChange();
-    }.bind(this);
-    
-    // Track popstate (back/forward)
-    this.popstateHandler = () => {
+    };
+
+    this.handlers.popstate = () => {
       trackPathChange();
       this.trackNavigation(lastPath, window.location.pathname, 'back');
     };
-    window.addEventListener('popstate', this.popstateHandler);
+    window.addEventListener('popstate', this.handlers.popstate);
   }
 
-  // Setup scroll tracking
   setupScrollTracking() {
     let maxScroll = 0;
-    let scrollTrackingInterval = null;
-    
+
     const trackScrollDepth = () => {
       const scrollHeight = document.documentElement.scrollHeight;
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const clientHeight = document.documentElement.clientHeight;
-      const scrollDepth = Math.round((scrollTop + clientHeight) / scrollHeight * 100);
-      
+      const scrollDepth = Math.round(((scrollTop + clientHeight) / scrollHeight) * 100);
+
       if (scrollDepth > maxScroll) {
         maxScroll = scrollDepth;
         const timeOnPage = this.pageStartTime ? Date.now() - this.pageStartTime : 0;
-        
-        // Track milestones: 25%, 50%, 75%, 100%
+
         if ([25, 50, 75, 100].includes(scrollDepth)) {
           this.trackScroll(scrollDepth, timeOnPage);
         }
       }
     };
-    
-    window.addEventListener('scroll', () => {
-      if (!scrollTrackingInterval) {
-        scrollTrackingInterval = setTimeout(() => {
+
+    this.handlers.scroll = () => {
+      if (!this.scrollTimeoutId) {
+        this.scrollTimeoutId = setTimeout(() => {
           trackScrollDepth();
-          scrollTrackingInterval = null;
+          this.scrollTimeoutId = null;
         }, 100);
       }
-    }, { passive: true });
+    };
+    window.addEventListener('scroll', this.handlers.scroll, { passive: true });
   }
 
-  // Setup form tracking
   setupFormTracking() {
-    document.addEventListener('focus', (event) => {
-      if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT') {
-        const form = event.target.closest('form');
-        if (form) {
-          this.trackFormInteraction(form.id || 'unnamed', 'focus', event.target.name || event.target.id);
-        }
-      }
-    }, true);
-    
-    document.addEventListener('blur', (event) => {
-      if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT') {
-        const form = event.target.closest('form');
-        if (form) {
-          this.trackFormInteraction(form.id || 'unnamed', 'blur', event.target.name || event.target.id);
-        }
-      }
-    }, true);
-    
-    document.addEventListener('change', (event) => {
-      if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT') {
-        const form = event.target.closest('form');
-        if (form) {
-          this.trackFormInteraction(form.id || 'unnamed', 'change', event.target.name || event.target.id);
-        }
-      }
-    }, true);
-    
-    document.addEventListener('submit', (event) => {
+    const isFormControl = (target) =>
+      target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT');
+
+    this.handlers.focus = (event) => {
+      if (!isFormControl(event.target)) return;
+      const form = event.target.closest('form');
+      if (form) this.trackFormInteraction(form.id || 'unnamed', 'focus', event.target.name || event.target.id);
+    };
+    this.handlers.blur = (event) => {
+      if (!isFormControl(event.target)) return;
+      const form = event.target.closest('form');
+      if (form) this.trackFormInteraction(form.id || 'unnamed', 'blur', event.target.name || event.target.id);
+    };
+    this.handlers.change = (event) => {
+      if (!isFormControl(event.target)) return;
+      const form = event.target.closest('form');
+      if (form) this.trackFormInteraction(form.id || 'unnamed', 'change', event.target.name || event.target.id);
+    };
+    this.handlers.submit = (event) => {
       const form = event.target;
       if (form.tagName === 'FORM') {
         this.trackFormInteraction(form.id || 'unnamed', 'submit');
         this.trackUserInteraction('form_submit', {
           formId: form.id,
-          formAction: form.action
+          formAction: form.action,
         });
       }
-    }, true);
+    };
+
+    document.addEventListener('focus', this.handlers.focus, true);
+    document.addEventListener('blur', this.handlers.blur, true);
+    document.addEventListener('change', this.handlers.change, true);
+    document.addEventListener('submit', this.handlers.submit, true);
   }
 
-  // Setup visibility tracking
   setupVisibilityTracking() {
-    document.addEventListener('visibilitychange', () => {
+    this.handlers.visibility = () => {
       if (document.hidden) {
         this.lastActivityTime = Date.now();
       } else {
         const timeAway = Date.now() - this.lastActivityTime;
-        if (timeAway > 30000) { // More than 30 seconds away
-          this.trackUserInteraction('tab_return', {
-            timeAway: timeAway
-          });
+        if (timeAway > 30000) {
+          this.trackUserInteraction('tab_return', { timeAway });
         }
       }
-    });
+    };
+    document.addEventListener('visibilitychange', this.handlers.visibility);
   }
 
-  // Setup error tracking
   setupErrorTracking() {
-    window.addEventListener('error', (event) => {
+    this.handlers.error = (event) => {
       this.trackUserInteraction('error', {
         message: event.message,
         filename: event.filename,
         lineno: event.lineno,
-        colno: event.colno
+        colno: event.colno,
       });
-    });
-    
-    window.addEventListener('unhandledrejection', (event) => {
+    };
+    this.handlers.rejection = (event) => {
       this.trackUserInteraction('unhandled_promise_rejection', {
-        reason: event.reason?.toString()
+        reason: event.reason?.toString(),
       });
-    });
+    };
+    window.addEventListener('error', this.handlers.error);
+    window.addEventListener('unhandledrejection', this.handlers.rejection);
   }
 
-  // Add event to batch
   addToBatch(eventType, eventData) {
     this.pendingEvents.push({ type: eventType, data: eventData });
-    
+
     if (this.pendingEvents.length >= this.batchSize) {
       this.flushBatch();
     } else if (!this.batchTimer) {
@@ -419,96 +409,67 @@ class AnalyticsTracker {
     }
   }
 
-  // Flush batched events
   flushBatch() {
     if (this.pendingEvents.length === 0) return;
-    
+
     const events = [...this.pendingEvents];
     this.pendingEvents = [];
-    
+
     if (this.batchTimer) {
       clearTimeout(this.batchTimer);
       this.batchTimer = null;
     }
-    
-    // Send batch to server
+
     this.sendBatch(events);
   }
 
-  // Send event to server
   async sendEvent(eventType, eventData, immediate = false) {
     if (!immediate && eventType !== 'page_view' && eventType !== 'navigation' && eventType !== 'page_exit') {
       this.addToBatch(eventType, eventData);
       return;
     }
-    
+
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-      
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
       const response = await fetch(`${API_URL}/analytics/track`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         signal: controller.signal,
-        body: JSON.stringify({
-          type: eventType,
-          data: eventData
-        }),
-        keepalive: immediate // Use keepalive for page exit events
+        body: JSON.stringify({ type: eventType, data: eventData }),
+        keepalive: immediate,
       });
-      
+
       clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        // Silently fail - don't log errors for analytics failures
-        // Analytics should never interrupt user experience
-        return;
-      }
-    } catch (error) {
-      // Silently fail - analytics errors should never be visible to users
-      // Network errors, timeouts, and connection failures are expected
-      // when backend is not available (e.g., in preview mode without backend)
-      // Do not log or throw - just return silently
-      return;
+      if (!response.ok) return;
+    } catch {
+      // Analytics failures never surface to users.
     }
   }
 
-  // Send batch of events
   async sendBatch(events) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-      
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
       const response = await fetch(`${API_URL}/analytics/track-batch`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         signal: controller.signal,
         body: JSON.stringify({ events }),
-        keepalive: true
+        keepalive: true,
       });
-      
+
       clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        // Silently fail - don't log errors for analytics failures
-        return;
-      }
-    } catch (error) {
-      // Silently fail - analytics errors should never be visible to users
-      // Network errors, timeouts, and connection failures are expected
-      // when backend is not available (e.g., in preview mode without backend)
-      // Do not log or throw - just return silently
-      return;
+      if (!response.ok) return;
+    } catch {
+      // Analytics failures never surface to users.
     }
   }
 
-  // Get analytics summary for current session
   getSessionSummary() {
     return {
       sessionId: this.sessionId,
@@ -518,15 +479,13 @@ class AnalyticsTracker {
       scrollEvents: this.scrollEvents.length,
       formInteractions: this.formInteractions.length,
       userInteractions: this.userInteractions.length,
-      timeOnSite: this.pageStartTime ? Date.now() - this.pageStartTime : 0
+      timeOnSite: this.pageStartTime ? Date.now() - this.pageStartTime : 0,
     };
   }
 }
 
-// Create singleton instance
 const analyticsTracker = new AnalyticsTracker();
 
-// Initialize on DOM ready
 if (typeof window !== 'undefined') {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
@@ -538,4 +497,3 @@ if (typeof window !== 'undefined') {
 }
 
 export default analyticsTracker;
-

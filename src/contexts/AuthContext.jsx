@@ -26,58 +26,65 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const hasCheckedSessionRef = useRef(false);
   const isCheckingSessionRef = useRef(false);
+  const isMountedRef = useRef(true);
+  const sessionTimeoutRef = useRef(null);
 
   useEffect(() => {
-    // Only check session once on mount. Do NOT set isCheckingSessionRef here—
-    // checkSession sets it to prevent concurrent calls; setting it here caused
-    // the guard inside checkSession to return early and never call getSession().
+    isMountedRef.current = true;
     if (!hasCheckedSessionRef.current && !isCheckingSessionRef.current) {
       hasCheckedSessionRef.current = true;
       checkSession();
     }
+    return () => {
+      isMountedRef.current = false;
+      if (sessionTimeoutRef.current) {
+        clearTimeout(sessionTimeoutRef.current);
+        sessionTimeoutRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Ensure loading is false if we have a user (e.g., after signin)
   useEffect(() => {
     if (user && loading) {
       setLoading(false);
     }
   }, [user, loading]);
 
+  const safeSetUser = (next) => {
+    if (isMountedRef.current) setUser(next);
+  };
+  const safeSetLoading = (next) => {
+    if (isMountedRef.current) setLoading(next);
+  };
+
   const checkSession = async () => {
-    // Prevent multiple simultaneous session checks (re-entrancy only)
-    if (isCheckingSessionRef.current) {
-      return;
-    }
-    try {
-      isCheckingSessionRef.current = true;
-      
-      // Add a fallback timeout to ensure loading state doesn't hang forever
-      const timeoutId = setTimeout(() => {
-        if (isCheckingSessionRef.current) {
-          console.warn('Session check taking too long, setting loading to false');
-          setLoading(false);
-          isCheckingSessionRef.current = false;
-        }
-      }, 10000); // Reduced to 10 seconds to match getSession timeout
-      
-      const data = await authAPI.getSession();
-      clearTimeout(timeoutId);
-      
-      if (data && data.user) {
-        setUser(data.user);
-      } else {
-        // If no user data, clear user state
-        setUser(null);
+    if (isCheckingSessionRef.current) return;
+    isCheckingSessionRef.current = true;
+
+    sessionTimeoutRef.current = setTimeout(() => {
+      if (isCheckingSessionRef.current && isMountedRef.current) {
+        console.warn('Session check taking too long, setting loading to false');
+        safeSetLoading(false);
       }
+      sessionTimeoutRef.current = null;
+    }, 10000);
+
+    try {
+      const data = await authAPI.getSession();
+      if (!isMountedRef.current) return;
+      safeSetUser(data && data.user ? data.user : null);
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error('Session check failed:', error);
       }
-      setUser(null);
+      safeSetUser(null);
     } finally {
-      // Always set loading to false, even if there was an error
-      setLoading(false);
+      if (sessionTimeoutRef.current) {
+        clearTimeout(sessionTimeoutRef.current);
+        sessionTimeoutRef.current = null;
+      }
+      safeSetLoading(false);
       isCheckingSessionRef.current = false;
     }
   };

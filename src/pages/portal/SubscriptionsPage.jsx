@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { portalAPI } from '../../utils/auth.js';
+import { useAbortableEffect, isAbortError } from '../../hooks/useAbortableEffect';
 import { CreditCard, Loader, CheckCircle2, Star, X, AlertCircle } from 'lucide-react';
 import SEOHead from '../../components/SEOHead';
 import { pricingOptions } from '../../constants/data';
@@ -52,15 +53,15 @@ const SubscriptionsPage = () => {
   // Transform pricingOptions to subscription format - single source of truth
   const availablePlans = useMemo(() => transformPricingToSubscription(pricingOptions), []);
 
-  useEffect(() => {
-    fetchSubscriptions();
+  useAbortableEffect((signal) => {
+    fetchSubscriptions(signal);
   }, []);
 
-  const fetchSubscriptions = async () => {
+  const fetchSubscriptions = async (signal) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await portalAPI.getSubscriptions();
+      const data = await portalAPI.getSubscriptions({ signal });
       // Normalize status to lowercase for all subscriptions
       const normalizedSubscriptions = (data.subscriptions || []).map(sub => ({
         ...sub,
@@ -69,6 +70,7 @@ const SubscriptionsPage = () => {
       console.log('Fetched subscriptions with statuses:', normalizedSubscriptions.map(s => ({ id: s.id, plan: s.plan_name, status: s.status })));
       setSubscriptions(normalizedSubscriptions);
     } catch (err) {
+      if (isAbortError(err)) return;
       setError(err.message);
     } finally {
       setLoading(false);

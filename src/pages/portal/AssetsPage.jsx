@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { portalAPI } from '../../utils/auth.js';
+import { useAbortableEffect, isAbortError } from '../../hooks/useAbortableEffect';
 import { FolderOpen, Loader, Upload, X, Image as ImageIcon, FileText, File, Trash2, Plus, CheckCircle2, AlertCircle, Download, CheckSquare, Square, Folder, ChevronDown, ChevronUp } from 'lucide-react';
 import SEOHead from '../../components/SEOHead';
 import { formatDateTimeUserTimezone } from '../../utils/dateFormat.js';
@@ -31,8 +32,8 @@ const AssetsPage = () => {
     project: ''
   });
 
-  useEffect(() => {
-    fetchAssets();
+  useAbortableEffect((signal) => {
+    fetchAssets(signal);
   }, []);
 
   // Cleanup timeout on unmount
@@ -44,11 +45,11 @@ const AssetsPage = () => {
     };
   }, []);
 
-  const fetchAssets = async () => {
+  const fetchAssets = async (signal) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await portalAPI.getAssets();
+      const data = await portalAPI.getAssets({ signal });
       // Debug logging only in development
       if (import.meta.env.DEV) {
         console.log('Fetched assets:', data.assets);
@@ -79,6 +80,7 @@ const AssetsPage = () => {
       });
       setGroupedAssets(grouped);
     } catch (err) {
+      if (isAbortError(err)) return;
       setError(err.message);
     } finally {
       setLoading(false);

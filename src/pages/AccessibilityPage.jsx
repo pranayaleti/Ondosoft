@@ -85,10 +85,14 @@ const AccessibilityPage = () => {
                     Our website is designed and developed with accessibility in mind, incorporating:
                   </p>
                   <ul className="list-disc pl-6 space-y-2 mt-4">
+                    <li>Skip link to main content on every page</li>
                     <li>Semantic HTML structure for screen readers</li>
                     <li>Proper heading hierarchy and document structure</li>
                     <li>Alt text for images and descriptive text for visual elements</li>
                     <li>Keyboard navigation support throughout the site</li>
+                    <li>Focus trapping in the mobile menu, scheduling modal, and chat dialog</li>
+                    <li>Escape closes menus and dialogs and restores focus</li>
+                    <li>Respect for prefers-reduced-motion on the home hero</li>
                     <li>Sufficient color contrast ratios for text readability</li>
                     <li>Focus indicators for keyboard navigation</li>
                     <li>Form labels and error messages</li>
@@ -150,12 +154,11 @@ const AccessibilityPage = () => {
                 <div>
                   <h2 className="text-3xl font-bold text-white mb-4">Known Limitations</h2>
                   <p className="leading-relaxed">
-                    Despite our best efforts to ensure accessibility, there may be some limitations. We are aware of the following areas and are working to address them:
+                    We aim for WCAG 2.1 Level AA and keep improving. Current limitations include:
                   </p>
                   <ul className="list-disc pl-6 space-y-2 mt-4">
-                    <li>Some third-party content or widgets may not be fully accessible</li>
-                    <li>Older content may not meet current accessibility standards</li>
-                    <li>Some interactive elements may require additional keyboard navigation improvements</li>
+                    <li>Third-party embeds (Calendly, chat) may not match the rest of the site&rsquo;s keyboard patterns</li>
+                    <li>Some older content and images may still need richer alt text or captions</li>
                     <li>Video content may need additional captions or transcripts</li>
                   </ul>
                   <p className="leading-relaxed mt-4">

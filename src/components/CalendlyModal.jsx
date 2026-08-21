@@ -1,11 +1,17 @@
+import { useRef } from "react";
 import { X } from "lucide-react";
 import CalendlyEmbed from "./CalendlyEmbed";
+import { useModalA11y } from "../hooks/useModalA11y";
 
 /**
- * Modal that shows the Calendly scheduler (same content as Contact page "Book instantly" section).
- * Used when user clicks "Schedule a meeting" or similar—no form, no redirect.
+ * Modal that shows the Calendly scheduler.
+ * Traps focus, closes on Escape, and locks body scroll while open.
  */
 const CalendlyModal = ({ isOpen, onClose, utmMedium = "website" }) => {
+  const dialogRef = useRef(null);
+  const closeBtnRef = useRef(null);
+  useModalA11y({ isOpen, containerRef: dialogRef, onClose, initialFocusRef: closeBtnRef });
+
   if (!isOpen) return null;
 
   return (
@@ -15,13 +21,16 @@ const CalendlyModal = ({ isOpen, onClose, utmMedium = "website" }) => {
       aria-modal="true"
       aria-labelledby="calendly-modal-title"
       onClick={(e) => {
-        // Close modal when clicking on backdrop
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="bg-gradient-to-b from-black to-gray-900 rounded-2xl w-full max-w-4xl max-h-[90vh] sm:max-h-[95vh] overflow-y-auto border border-neutral-700 shadow-2xl relative mx-auto">
+      <div
+        ref={dialogRef}
+        tabIndex={-1}
+        className="bg-gradient-to-b from-black to-gray-900 rounded-2xl w-full max-w-4xl max-h-[90vh] sm:max-h-[95vh] overflow-y-auto border border-neutral-700 shadow-2xl relative mx-auto outline-none"
+      >
         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 p-4 sm:p-6 pb-4 bg-gradient-to-b from-black to-gray-900 border-b border-neutral-700">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold uppercase tracking-wide text-orange-400 mb-1">
@@ -31,10 +40,11 @@ const CalendlyModal = ({ isOpen, onClose, utmMedium = "website" }) => {
               See live availability and lock a time without leaving this page.
             </h2>
             <p className="text-gray-400 text-sm mt-2">
-              We’ll meet for 30 minutes to map your goals, timeline, and budget. Your timezone is auto-detected.
+              We&rsquo;ll meet for 30 minutes to map your goals, timeline, and budget. Your timezone is auto-detected.
             </p>
           </div>
           <button
+            ref={closeBtnRef}
             type="button"
             onClick={onClose}
             className="flex-shrink-0 p-2 rounded-full text-gray-400 hover:text-white hover:bg-neutral-700 transition-colors flex items-center justify-center"

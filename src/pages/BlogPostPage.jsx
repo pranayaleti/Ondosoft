@@ -25,10 +25,9 @@ const BlogPostPage = () => {
 
   // Scroll to top when navigating to a blog post
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }, [slug]);
 
-  // Lazy load blogData and resolve post for current slug (clear stale state when slug changes)
   useEffect(() => {
     const currentSlug = slug;
     slugRef.current = currentSlug;
@@ -37,28 +36,35 @@ const BlogPostPage = () => {
     setCategoryName(null);
     setPostLoading(true);
 
-    import('../data/blogData').then(module => {
-      const foundPost = module.getPostBySlug(currentSlug);
-      // Only apply state if this effect is still for the current route (avoid stale update after nav)
-      if (slugRef.current !== currentSlug) return;
-      setBlogData({
-        getPostBySlug: module.getPostBySlug,
-        getRelatedPosts: module.getRelatedPosts,
-        blogCategories: module.blogCategories
+    let cancelled = false;
+
+    import('../data/blogData')
+      .then((module) => {
+        if (cancelled || slugRef.current !== currentSlug) return;
+        const foundPost = module.getPostBySlug(currentSlug);
+        setBlogData({
+          getPostBySlug: module.getPostBySlug,
+          getRelatedPosts: module.getRelatedPosts,
+          blogCategories: module.blogCategories,
+        });
+        setPost(foundPost);
+        if (foundPost) {
+          setRelatedPosts(module.getRelatedPosts(foundPost, 3));
+          const foundCategory = module.blogCategories.find((cat) => cat.id === foundPost.category);
+          setCategoryName(foundCategory?.name || null);
+        } else {
+          setRelatedPosts([]);
+          setCategoryName(null);
+        }
+        setPostLoading(false);
+      })
+      .catch(() => {
+        if (!cancelled && slugRef.current === currentSlug) setPostLoading(false);
       });
-      setPost(foundPost);
-      if (foundPost) {
-        setRelatedPosts(module.getRelatedPosts(foundPost, 3));
-        const foundCategory = module.blogCategories.find(cat => cat.id === foundPost.category);
-        setCategoryName(foundCategory?.name || null);
-      } else {
-        setRelatedPosts([]);
-        setCategoryName(null);
-      }
-      setPostLoading(false);
-    }).catch(() => {
-      if (slugRef.current === currentSlug) setPostLoading(false);
-    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
   const structuredData = useMemo(() => {
@@ -134,18 +140,25 @@ const BlogPostPage = () => {
 
   if (!post) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-white mb-4">Post Not Found</h1>
-          <p className="text-gray-200 mb-8">The article you're looking for doesn't exist.</p>
-          <Link 
-            to="/blogs"
-            className="bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors"
-          >
-            Back to Blogs
-          </Link>
+      <>
+        <SEOHead
+          title="Post Not Found | Ondosoft Blogs"
+          description="The article you're looking for doesn't exist."
+          noIndex={true}
+        />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-white mb-4">Post Not Found</h1>
+            <p className="text-gray-200 mb-8">The article you're looking for doesn't exist.</p>
+            <Link
+              to="/blogs"
+              className="bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors"
+            >
+              Back to Blogs
+            </Link>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -251,6 +264,9 @@ const BlogPostPage = () => {
         keywords={(post.tags ?? []).join(', ')}
         canonicalUrl={getCanonicalUrl(`/blogs/${post.slug}`)}
         ogImage={post.socialImage || post.image || post.featuredImage}
+        ogType="article"
+        publishedTime={post.publishDate}
+        modifiedTime={post.lastUpdated || post.updatedAt || post.publishDate}
         structuredData={structuredData}
       />
       

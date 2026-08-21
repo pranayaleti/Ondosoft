@@ -1,19 +1,15 @@
-import { companyInfo, getPostalAddressSchema, getContactPointSchema } from '../constants/companyInfo';
+import { companyInfo } from '../constants/companyInfo';
 
-// Service-specific schema markup for individual service pages
+// Service-specific schema markup for individual service pages.
+// Provider references the global Organization graph (@id) instead of
+// re-emitting a full Organization, so we do not duplicate the entity.
 const ServiceSchema = ({ serviceName, serviceDescription, serviceType, pageUrl }) => {
   const serviceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
     "name": serviceName,
     "description": serviceDescription,
-    "provider": {
-      "@type": "Organization",
-      "name": companyInfo.name,
-      "url": companyInfo.urls.website,
-      "logo": `${companyInfo.urls.website}/logo.png`,
-      "contactPoint": getContactPointSchema("customer service")
-    },
+    "provider": { "@id": `${companyInfo.urls.website}/#organization` },
     "areaServed": {
       "@type": "Country",
       "name": "United States"
@@ -25,22 +21,7 @@ const ServiceSchema = ({ serviceName, serviceDescription, serviceType, pageUrl }
       "@type": "Offer",
       "description": serviceDescription,
       "priceRange": "$$",
-      "availability": "https://schema.org/InStock",
-      "validFrom": "2024-01-01"
-    },
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": `${serviceName} Services`,
-      "itemListElement": [
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": serviceName,
-            "description": serviceDescription
-          }
-        }
-      ]
+      "availability": "https://schema.org/InStock"
     }
   };
 

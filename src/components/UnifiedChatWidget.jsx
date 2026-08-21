@@ -85,8 +85,9 @@ const UnifiedChatWidget = () => {
 
   return (
     <>
-      {/* Floating Widget - Right Side */}
-      <div className="fixed bottom-4 right-4 z-40 sm:bottom-6 sm:right-6">
+      {/* Floating Widget - Right Side (raised on mobile to clear install/offline banners) */}
+      <div className="fixed bottom-20 right-4 z-40 sm:bottom-6 sm:right-6"
+        style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
         <button
           onClick={handleOpen}
           className="group bg-gradient-to-r from-orange-500 to-orange-600 text-white p-3 sm:p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95"
@@ -110,7 +111,8 @@ const UnifiedChatWidget = () => {
 
       {/* Initial Prompt - Bottom Right Panel */}
       {showPrompt && (
-        <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6 w-full max-w-sm animate-slide-up">
+        <div className="fixed bottom-20 right-4 z-50 sm:bottom-6 sm:right-6 w-[calc(100%-2rem)] max-w-sm animate-slide-up"
+          style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="bg-white rounded-2xl shadow-2xl overflow-hidden relative">
             {/* Close Button */}
             <button

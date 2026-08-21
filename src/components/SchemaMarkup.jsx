@@ -33,11 +33,6 @@ const SchemaMarkup = () => {
         "description": "Full stack software development, AI products, and platform engineering for modern teams.",
         "publisher": {
           "@id": `${companyInfo.urls.website}/#organization`
-        },
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": `${companyInfo.urls.website}/search?q={search_term_string}`,
-          "query-input": "required name=search_term_string"
         }
       },
       {
@@ -104,14 +99,10 @@ const SchemaMarkup = () => {
         "areaServed": {
           "@type": "Country",
           "name": companyInfo.location.country
-        },
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": companyInfo.ratings.value,
-          "reviewCount": companyInfo.ratings.reviewCountAlt,
-          "bestRating": companyInfo.ratings.bestRating,
-          "worstRating": companyInfo.ratings.worstRating
         }
+        // AggregateRating intentionally omitted here: the rich-snippet policies
+        // require individually resolvable Review entities, which we do not
+        // currently expose. Add back only when linkable reviews exist.
       }
     ]
   };

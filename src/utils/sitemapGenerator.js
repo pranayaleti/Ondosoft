@@ -120,7 +120,7 @@ export const generateRobotsTxt = () => {
   const baseUrl = companyInfo.urls.website;
 
   return `# robots.txt for Ondosoft
-# Simplified to keep important routes indexable
+# Public marketing pages are indexable. Authenticated and API surfaces are blocked.
 
 User-agent: *
 Allow: /
@@ -129,11 +129,8 @@ Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /portal/
 Disallow: /auth/
-Disallow: /sign-in
-Disallow: /sign-up
+Disallow: /reset-password
 Disallow: /api/
-Disallow: /_next/
-Disallow: /node_modules/
 
 Allow: /sitemap.xml
 Allow: /sitemap-blogs.xml

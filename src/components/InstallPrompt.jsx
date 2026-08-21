@@ -61,7 +61,8 @@ export default function InstallPrompt() {
       aria-label="Install application"
       style={{
         position: 'fixed',
-        bottom: '1.5rem',
+        // Keep clear of the bottom-right chat FAB on mobile.
+        bottom: 'max(5.5rem, calc(env(safe-area-inset-bottom) + 5rem))',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 9998,

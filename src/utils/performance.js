@@ -94,121 +94,15 @@ export const loadComponent = (importFunction) => {
 // Critical CSS extraction (no-op: index.html inlines critical CSS for FCP/LCP)
 export const extractCriticalCSS = () => {};
 
-// Performance monitoring
-export const initPerformanceMonitoring = () => {
-  // Web Vitals monitoring - only send to analytics, no console logging
-  if (typeof window !== 'undefined' && 'PerformanceObserver' in window) {
-    // LCP monitoring
-    const lcpObserver = new PerformanceObserver((list) => {
-      const entries = list.getEntries();
-      const lastEntry = entries[entries.length - 1];
-      
-      // Only log in development
-      if (import.meta.env.DEV) {
-        console.log('LCP:', lastEntry.startTime);
-      }
-      
-      // Send to analytics
-      if (window.gtag) {
-        window.gtag('event', 'web_vitals', {
-          name: 'LCP',
-          value: Math.round(lastEntry.startTime),
-          event_category: 'Performance'
-        });
-      }
-    });
-    
-    try {
-      lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
-    } catch (e) {
-      // LCP observer not supported
-    }
-    
-    // FID monitoring
-    const fidObserver = new PerformanceObserver((list) => {
-      const entries = list.getEntries();
-      entries.forEach((entry) => {
-        const fid = entry.processingStart - entry.startTime;
-        
-        // Only log in development
-        if (import.meta.env.DEV) {
-          console.log('FID:', fid);
-        }
-        
-        // Send to analytics
-        if (window.gtag) {
-          window.gtag('event', 'web_vitals', {
-            name: 'FID',
-            value: Math.round(fid),
-            event_category: 'Performance'
-          });
-        }
-      });
-    });
-    
-    try {
-      fidObserver.observe({ entryTypes: ['first-input'] });
-    } catch (e) {
-      // FID observer not supported
-    }
-    
-    // CLS monitoring
-    let clsValue = 0;
-    const clsObserver = new PerformanceObserver((list) => {
-      const entries = list.getEntries();
-      entries.forEach((entry) => {
-        if (!entry.hadRecentInput) {
-          clsValue += entry.value;
-          
-          // Only log in development
-          if (import.meta.env.DEV) {
-            console.log('CLS:', entry.value);
-          }
-        }
-      });
-      
-      // Send final CLS to analytics
-      if (window.gtag && clsValue > 0) {
-        window.gtag('event', 'web_vitals', {
-          name: 'CLS',
-          value: Math.round(clsValue * 1000),
-          event_category: 'Performance'
-        });
-      }
-    });
-    
-    try {
-      clsObserver.observe({ entryTypes: ['layout-shift'] });
-    } catch (e) {
-      // CLS observer not supported
-    }
+// Web Vitals monitoring lives in the <PerformanceMonitor /> component so it can
+// disconnect the PerformanceObservers on unmount. Keeping both here and there
+// caused duplicate observers with no cleanup path, so this file no longer
+// installs any PerformanceObservers.
 
-    // INP (Interaction to Next Paint) - report slow interactions where supported
-    try {
-      const inpObserver = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          const delay = entry.processingStart - entry.startTime;
-          if (window.gtag && typeof delay === 'number' && delay >= 40) {
-            window.gtag('event', 'web_vitals', {
-              name: 'INP',
-              value: Math.round(delay),
-              event_category: 'Performance'
-            });
-          }
-        }
-      });
-      inpObserver.observe({ type: 'event', buffered: true });
-    } catch (e) {
-      // INP / event timing not supported
-    }
-  }
-};
-
-// Initialize all performance optimizations (bfcache-safe: no unload/beforeunload)
+// Initialize non-vitals performance optimizations (bfcache-safe: no unload/beforeunload).
 export const initPerformanceOptimizations = () => {
   preloadCriticalResources();
   addResourceHints();
   registerServiceWorker();
   extractCriticalCSS();
-  initPerformanceMonitoring();
 };

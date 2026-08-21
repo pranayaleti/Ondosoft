@@ -63,8 +63,9 @@ export const companyInfo = {
     width: 200,
     height: 60,
   },
-  // OG image dimensions
+  // OG image (1200×630 social share card)
   ogImage: {
+    path: "/og-image.png",
     width: 1200,
     height: 630,
   },
