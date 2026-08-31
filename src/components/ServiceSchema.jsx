@@ -42,7 +42,7 @@ const CityServiceSchema = ({ city, state, serviceName, serviceDescription }) => 
     "@type": "LocalBusiness",
     "name": `${companyInfo.name} - ${serviceName} in ${city}, ${state}`,
     "description": `${serviceDescription} services in ${city}, ${state}. Professional software development, custom projects, and SaaS solutions.`,
-    "url": `${companyInfo.urls.website}/services/${serviceName.toLowerCase().replace(/\s+/g, '-')}/${city.toLowerCase().replace(/\s+/g, '-')}-${state.toLowerCase()}`,
+    "url": `${companyInfo.urls.website}/services`,
     "telephone": companyInfo.phoneE164,
     "email": companyInfo.email,
     "address": {

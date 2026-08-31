@@ -25,8 +25,73 @@ const OG_IMAGE = `${SITE}/og-image.png`;
 const ROUTES = [
   {
     path: '/',
-    title: 'Ondosoft | Custom Software, SaaS, and AI Engineering',
-    description: 'Ondosoft is a US-based product team delivering custom software, SaaS platforms, and AI-enabled experiences with secure, scalable engineering.',
+    title: 'Ondosoft | Product Engineering Teams to Build, Scale, and Modernize',
+    description: 'Build, scale, and modernize software with a US-based engineering team that operates like your own. Custom web, SaaS, mobile, cloud, and AI engineering from Ondosoft in Lehi, Utah.',
+  },
+  {
+    path: '/solutions',
+    title: 'Solutions | Ondosoft Product Engineering',
+    description: 'Explore Ondosoft solutions: product engineering, dedicated teams, AI, legacy modernization, cloud & DevOps, and web & mobile development.',
+  },
+  {
+    path: '/solutions/product-engineering',
+    title: 'Product Engineering | Ondosoft',
+    description: 'Ondosoft product engineering for custom web apps and SaaS platforms. US-based engineers shipping React, Node.js, and Python systems with clear roadmaps.',
+  },
+  {
+    path: '/solutions/dedicated-teams',
+    title: 'Dedicated Engineering Teams | Ondosoft',
+    description: 'Dedicated Ondosoft engineering teams that operate like your own. Senior full-stack delivery, weekly demos, and flexible engagement for startups and enterprises.',
+  },
+  {
+    path: '/solutions/ai',
+    title: 'AI Engineering | Ondosoft',
+    description: 'Ondosoft AI engineering: LLM features, automation, NLP, and data pipelines shipped into production software — not slide-deck prototypes.',
+  },
+  {
+    path: '/solutions/legacy-modernization',
+    title: 'Legacy Modernization | Ondosoft',
+    description: 'Modernize legacy software with Ondosoft. Re-architecture, React UI, APIs, data migration, and cloud cutover from a US-based product team.',
+  },
+  {
+    path: '/solutions/cloud-devops',
+    title: 'Cloud & DevOps | Ondosoft',
+    description: 'Cloud engineering and DevOps from Ondosoft: AWS, GCP, Docker, Kubernetes, CI/CD, and Terraform for software that stays up in production.',
+  },
+  {
+    path: '/solutions/web-mobile',
+    title: 'Web & Mobile Development | Ondosoft',
+    description: 'Web and mobile development from Ondosoft — React, React Native, Flutter, and native iOS/Android with shared APIs and production deployment.',
+  },
+  {
+    path: '/case-studies',
+    title: 'Case Studies | Ondosoft Product Engineering',
+    description: 'Read Ondosoft case studies as problem, solution, technology, and result. SaaS, e-commerce, and analytics work from the existing portfolio.',
+  },
+  {
+    path: '/case-studies/techstart-saas-platform',
+    title: 'TechStart Inc. — SaaS Platform Development | Ondosoft',
+    description: 'Needed a scalable SaaS platform to handle 10,000+ users with subscription billing, multi-tenant architecture, and real-time analytics.',
+  },
+  {
+    path: '/case-studies/retailmax-ecommerce',
+    title: 'RetailMax — E-commerce Solution | Ondosoft',
+    description: 'Legacy e-commerce system modernized with React, real-time inventory, and mobile-first design.',
+  },
+  {
+    path: '/case-studies/dataflow-analytics',
+    title: 'DataFlow Solutions — Custom Web Application | Ondosoft',
+    description: 'Custom data visualization dashboard replacing disconnected tools with real-time insights.',
+  },
+  {
+    path: '/industries',
+    title: 'Industries | Ondosoft Product Engineering',
+    description: 'Ondosoft works across e-commerce, healthcare, fintech, education, logistics, SaaS, and more — the industries already listed in our capabilities deck.',
+  },
+  {
+    path: '/insights',
+    title: 'Insights | Ondosoft',
+    description: 'Ondosoft insights on product engineering, SaaS, automation, and web development — the same writing published on our blog.',
   },
   {
     path: '/services',
@@ -122,11 +187,13 @@ const escapeHtml = (value) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
-const replaceMeta = (html, { path, title, description }) => {
+const replaceMeta = (html, { path, title, description, ogImage, ogType }) => {
   const canonical = path === '/' ? `${SITE}/` : `${SITE}${path}`;
   const safeTitle = escapeHtml(title);
   const safeDesc = escapeHtml(description);
   const safeUrl = escapeHtml(canonical);
+  const safeImage = escapeHtml(ogImage || OG_IMAGE);
+  const safeType = escapeHtml(ogType || 'website');
 
   let next = html;
   next = next.replace(/<title>[\s\S]*?<\/title>/, `<title>${safeTitle}</title>`);
@@ -144,13 +211,14 @@ const replaceMeta = (html, { path, title, description }) => {
   };
 
   setOrInsert(/<link rel="canonical" href="[^"]*"\s*\/?>/, `<link rel="canonical" href="${safeUrl}" />`);
+  setOrInsert(/<meta property="og:type" content="[^"]*"\s*\/?>/, `<meta property="og:type" content="${safeType}" />`);
   setOrInsert(/<meta property="og:url" content="[^"]*"\s*\/?>/, `<meta property="og:url" content="${safeUrl}" />`);
   setOrInsert(/<meta property="og:title" content="[^"]*"\s*\/?>/, `<meta property="og:title" content="${safeTitle}" />`);
   setOrInsert(/<meta property="og:description" content="[^"]*"\s*\/?>/, `<meta property="og:description" content="${safeDesc}" />`);
-  setOrInsert(/<meta property="og:image" content="[^"]*"\s*\/?>/, `<meta property="og:image" content="${OG_IMAGE}" />`);
+  setOrInsert(/<meta property="og:image" content="[^"]*"\s*\/?>/, `<meta property="og:image" content="${safeImage}" />`);
   setOrInsert(/<meta name="twitter:title" content="[^"]*"\s*\/?>/, `<meta name="twitter:title" content="${safeTitle}" />`);
   setOrInsert(/<meta name="twitter:description" content="[^"]*"\s*\/?>/, `<meta name="twitter:description" content="${safeDesc}" />`);
-  setOrInsert(/<meta name="twitter:image" content="[^"]*"\s*\/?>/, `<meta name="twitter:image" content="${OG_IMAGE}" />`);
+  setOrInsert(/<meta name="twitter:image" content="[^"]*"\s*\/?>/, `<meta name="twitter:image" content="${safeImage}" />`);
 
   return next;
 };
@@ -223,6 +291,10 @@ try {
       path: `/blogs/${post.slug}`,
       title: `${post.title} | Ondosoft Blogs`,
       description: post.metaDescription || post.excerpt || post.title,
+      ogType: 'article',
+      ogImage: typeof post.socialImage === 'string' && post.socialImage.startsWith('http')
+        ? post.socialImage
+        : undefined,
     });
   }
   console.log(`Prerendered ${ROUTES.length} marketing routes and ${posts.length} blog posts.`);
@@ -231,5 +303,14 @@ try {
   console.log(`Prerendered ${ROUTES.length} marketing routes.`);
 }
 
-copyFileSync(join(distDir, 'index.html'), join(distDir, '404.html'));
-console.log('Copied dist/index.html → dist/404.html');
+const homeHtml = readFileSync(join(distDir, 'index.html'), 'utf8');
+let notFoundHtml = homeHtml
+  .replace(/<title>[\s\S]*?<\/title>/, '<title>404 - Page Not Found | Ondosoft</title>')
+  .replace(/<link rel="canonical"[^>]*>/, '')
+  .replace(/<meta name="robots"[^>]*>/g, '');
+notFoundHtml = notFoundHtml.replace(
+  '</title>',
+  '</title>\n    <meta name="robots" content="noindex, nofollow, noarchive" />'
+);
+writeFileSync(join(distDir, '404.html'), notFoundHtml, 'utf8');
+console.log('Wrote dist/404.html with noindex');

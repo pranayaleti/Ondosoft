@@ -43,6 +43,7 @@ export default defineConfig({
         'og-image.png',
         'robots.txt',
         'sitemap.xml',
+        'sitemap-blogs.xml',
         'offline.html',
         'icons/icon-72x72.png',
         'icons/icon-96x96.png',
@@ -111,7 +112,7 @@ export default defineConfig({
         globIgnores: ['**/logo.backup*'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/api\//, /^\/sitemap\.xml$/, /^\/robots\.txt$/],
+        navigateFallbackDenylist: [/^\/api\//, /^\/sitemap\.xml$/, /^\/sitemap-blogs\.xml$/, /^\/robots\.txt$/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true

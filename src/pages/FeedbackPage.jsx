@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import SEOHead from "../components/SEOHead";
+import HoneypotField from "../components/HoneypotField";
 import { getAPIUrl } from "../utils/apiConfig";
 import {
   sanitizeInput,
@@ -9,7 +10,6 @@ import {
 } from "../utils/security.js";
 import { companyInfo } from "../constants/companyInfo";
 import { CheckCircle, AlertCircle, Send } from "lucide-react";
-import { lazy, Suspense } from "react";
 
 const Footer = lazy(() => import("../components/Footer"));
 
@@ -48,6 +48,7 @@ const FeedbackPage = () => {
     email: "",
     category: "",
     message: "",
+    website: "",
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,6 +85,12 @@ const FeedbackPage = () => {
       setErrorMessage("Too many submissions. Please try again in a minute.");
       return;
     }
+    if (formData.website) {
+      setSubmitStatus("success");
+      setFormData({ name: "", email: "", category: "", message: "", website: "" });
+      return;
+    }
+
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -100,6 +107,7 @@ const FeedbackPage = () => {
           category: formData.category,
           message: sanitizeInput(formData.message),
           page_url: typeof window !== "undefined" ? window.location.href : null,
+          website: formData.website,
         }),
         credentials: "include",
       });
@@ -113,7 +121,7 @@ const FeedbackPage = () => {
       }
 
       setSubmitStatus("success");
-      setFormData({ name: "", email: "", category: "", message: "" });
+      setFormData({ name: "", email: "", category: "", message: "", website: "" });
     } catch (_) {
       setSubmitStatus("error");
       setErrorMessage("Unable to send. Please check your connection and try again.");
@@ -177,10 +185,19 @@ const FeedbackPage = () => {
             /* Form */
             <form
               onSubmit={handleSubmit}
-              className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-6 sm:p-8 shadow-xl"
+              noValidate
+              className="relative rounded-2xl border border-neutral-800 bg-neutral-900/80 p-6 sm:p-8 shadow-xl"
             >
+              <HoneypotField
+                id="feedback-website"
+                value={formData.website}
+                onChange={handleChange}
+              />
               {submitStatus === "error" && (
-                <div className="mb-6 p-4 rounded-lg bg-red-900/20 border border-red-500/40 flex items-start gap-3">
+                <div
+                  className="mb-6 p-4 rounded-lg bg-red-900/20 border border-red-500/40 flex items-start gap-3"
+                  role="alert"
+                >
                   <AlertCircle className="text-red-400 flex-shrink-0 mt-0.5" />
                   <p className="text-red-200 text-sm">{errorMessage}</p>
                 </div>
@@ -202,9 +219,11 @@ const FeedbackPage = () => {
                       errors.name ? "border-red-500/50" : "border-neutral-700"
                     } text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50`}
                     autoComplete="name"
+                    aria-invalid={!!errors.name}
+                    aria-describedby={errors.name ? "feedback-name-error" : undefined}
                   />
                   {errors.name && (
-                    <p className="mt-1 text-sm text-red-400">{errors.name}</p>
+                    <p id="feedback-name-error" className="mt-1 text-sm text-red-400">{errors.name}</p>
                   )}
                 </div>
 
@@ -223,9 +242,11 @@ const FeedbackPage = () => {
                       errors.email ? "border-red-500/50" : "border-neutral-700"
                     } text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50`}
                     autoComplete="email"
+                    aria-invalid={!!errors.email}
+                    aria-describedby={errors.email ? "feedback-email-error" : undefined}
                   />
                   {errors.email && (
-                    <p className="mt-1 text-sm text-red-400">{errors.email}</p>
+                    <p id="feedback-email-error" className="mt-1 text-sm text-red-400">{errors.email}</p>
                   )}
                 </div>
 
@@ -241,6 +262,8 @@ const FeedbackPage = () => {
                     className={`w-full px-4 py-3 rounded-lg bg-neutral-800 border ${
                       errors.category ? "border-red-500/50" : "border-neutral-700"
                     } text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50`}
+                    aria-invalid={!!errors.category}
+                    aria-describedby={errors.category ? "feedback-category-error" : undefined}
                   >
                     <option value="">Choose one…</option>
                     {CATEGORIES.map((c) => (
@@ -250,7 +273,7 @@ const FeedbackPage = () => {
                     ))}
                   </select>
                   {errors.category && (
-                    <p className="mt-1 text-sm text-red-400">{errors.category}</p>
+                    <p id="feedback-category-error" className="mt-1 text-sm text-red-400">{errors.category}</p>
                   )}
                 </div>
 
@@ -268,12 +291,14 @@ const FeedbackPage = () => {
                     className={`w-full px-4 py-3 rounded-lg bg-neutral-800 border ${
                       errors.message ? "border-red-500/50" : "border-neutral-700"
                     } text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 resize-y min-h-[120px]`}
+                    aria-invalid={!!errors.message}
+                    aria-describedby={errors.message ? "feedback-message-error feedback-message-count" : "feedback-message-count"}
                   />
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p id="feedback-message-count" className="mt-1 text-xs text-gray-500">
                     {formData.message.length}/2000
                   </p>
                   {errors.message && (
-                    <p className="mt-1 text-sm text-red-400">{errors.message}</p>
+                    <p id="feedback-message-error" className="mt-1 text-sm text-red-400">{errors.message}</p>
                   )}
                 </div>
               </div>

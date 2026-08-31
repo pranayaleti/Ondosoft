@@ -21,11 +21,18 @@ import analyticsTracker from "./utils/analytics.js";
 import UnifiedChatWidget from "./components/UnifiedChatWidget";
 import InstallPrompt from "./components/InstallPrompt";
 import OfflineIndicator from "./components/OfflineIndicator";
+import StickyMobileCTA from "./components/product/StickyMobileCTA";
 
 // Lazy load page components for better performance
 const HomePage = lazy(() => import("./pages/HomePage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ServicesPage = lazy(() => import("./pages/ServicesPage"));
+const SolutionsIndexPage = lazy(() => import("./pages/SolutionsIndexPage"));
+const SolutionPage = lazy(() => import("./pages/SolutionPage"));
+const CaseStudiesPage = lazy(() => import("./pages/CaseStudiesPage"));
+const CaseStudyPage = lazy(() => import("./pages/CaseStudyPage"));
+const IndustriesPage = lazy(() => import("./pages/IndustriesPage"));
+const InsightsPage = lazy(() => import("./pages/InsightsPage"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const TestimonialsPage = lazy(() => import("./pages/TestimonialsPage"));
 const PortfolioPage = lazy(() => import("./pages/PortfolioPage"));
@@ -131,13 +138,13 @@ const AppRoutes = () => {
     const timeoutIds = [];
     const idleHandle = requestIdleCallback(() => {
       const commonRoutes = [
-        () => import('./pages/ServicesPage'),
+        () => import('./pages/SolutionsIndexPage'),
+        () => import('./pages/CaseStudiesPage'),
         () => import('./pages/ContactPage'),
         () => import('./pages/AboutPage'),
-        () => import('./pages/PricingPage'),
-        () => import('./pages/PortfolioPage'),
+        () => import('./pages/InsightsPage'),
+        () => import('./pages/ServicesPage'),
         () => import('./pages/BlogPage'),
-        () => import('./pages/FAQPage'),
       ];
       commonRoutes.forEach((prefetchFn, index) => {
         const id = setTimeout(() => prefetchFn().catch(() => {}), index * 80);
@@ -157,7 +164,7 @@ const AppRoutes = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
+      <div className="min-h-screen bg-ink">
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-orange-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white"
@@ -176,6 +183,12 @@ const AppRoutes = () => {
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<HomePage />} />
+                <Route path="/solutions" element={<SolutionsIndexPage />} />
+                <Route path="/solutions/:slug" element={<SolutionPage />} />
+                <Route path="/case-studies" element={<CaseStudiesPage />} />
+                <Route path="/case-studies/:slug" element={<CaseStudyPage />} />
+                <Route path="/industries" element={<IndustriesPage />} />
+                <Route path="/insights" element={<InsightsPage />} />
                 <Route path="/services" element={<ServicesPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/testimonials" element={<TestimonialsPage />} />
@@ -247,6 +260,7 @@ const AppRoutes = () => {
             </Suspense>
           </ErrorBoundary>
         </main>
+        <StickyMobileCTA />
         <UnifiedChatWidget />
         <InstallPrompt />
         <OfflineIndicator />

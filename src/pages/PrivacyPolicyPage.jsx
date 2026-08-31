@@ -1,14 +1,10 @@
-import { useState, lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import SEOHead from '../components/SEOHead';
-// Lazy load heavy components
 const Footer = lazy(() => import('../components/Footer'));
-const CalendlyModal = lazy(() => import('../components/CalendlyModal'));
 import ContactInfo from '../components/ContactInfo';
 import { companyInfo, getCanonicalUrl } from '../constants/companyInfo';
-import { formatDateUserTimezone } from '../utils/dateFormat.js';
 
 const PrivacyPolicyPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const canonical = getCanonicalUrl('/privacy-policy');
   const structuredData = {
     "@context": "https://schema.org",
@@ -59,7 +55,7 @@ const PrivacyPolicyPage = () => {
                 Privacy <span className="text-orange-500">Policy</span>
               </h1>
               <p className="text-xl md:text-2xl mb-8 text-gray-300 drop-shadow-md">
-                Last Updated: {formatDateUserTimezone(new Date(), { year: 'numeric', month: 'long', day: 'numeric' })}
+                Last Updated: {companyInfo.legalLastUpdated}
               </p>
             </div>
           </div>
@@ -221,11 +217,6 @@ const PrivacyPolicyPage = () => {
       <Suspense fallback={<div className="h-32" />}>
         <Footer />
       </Suspense>
-      {isModalOpen && (
-        <Suspense fallback={null}>
-          <CalendlyModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-        </Suspense>
-      )}
     </>
   );
 };

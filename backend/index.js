@@ -1929,6 +1929,11 @@ const publicWriteLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many requests. Please try again shortly.' },
 });
+
+const isHoneypotTriggered = (body) => {
+  const bait = body?.website ?? body?.company_url ?? '';
+  return typeof bait === 'string' && bait.trim().length > 0;
+};
 const analyticsLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 120,
@@ -4749,6 +4754,10 @@ app.post('/api/analytics/track-batch', analyticsLimiter, async (req, res) => {
 // Submit consultation form (public endpoint)
 app.post('/api/consultation/submit', publicWriteLimiter, async (req, res) => {
   try {
+    if (isHoneypotTriggered(req.body)) {
+      return res.json({ success: true });
+    }
+
     const {
       name,
       email,
@@ -4758,6 +4767,7 @@ app.post('/api/consultation/submit', publicWriteLimiter, async (req, res) => {
       selectedPlanPrice,
       timeline,
       budget,
+      projectType,
       message,
       qaResponses,
       timezone,
@@ -4772,7 +4782,11 @@ app.post('/api/consultation/submit', publicWriteLimiter, async (req, res) => {
     const trimmedName = typeof name === 'string' ? name.trim() : '';
     const trimmedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
     const trimmedPhone = typeof phone === 'string' ? phone.trim() : '';
+    const trimmedProjectType = typeof projectType === 'string' ? projectType.trim().slice(0, 80) : '';
     const trimmedMessage = typeof message === 'string' ? message.trim() : '';
+    const messageWithType = trimmedProjectType && !trimmedMessage.toLowerCase().includes('project type')
+      ? `Project type: ${trimmedProjectType}\n\n${trimmedMessage}`
+      : trimmedMessage;
     const trimmedCompany = typeof company === 'string' ? company.trim() : '';
 
     if (!trimmedName || !trimmedEmail || !trimmedPhone) {
@@ -4813,7 +4827,7 @@ app.post('/api/consultation/submit', publicWriteLimiter, async (req, res) => {
        RETURNING id, created_at`,
       [
         sessionId, trimmedName, trimmedEmail, trimmedPhone, trimmedCompany || null, selectedPlan || null, selectedPlanPrice || null,
-        timeline || null, budget || null, trimmedMessage || null, qaResponsesParsed ? JSON.stringify(qaResponsesParsed) : null,
+        timeline || null, budget || null, messageWithType || null, qaResponsesParsed ? JSON.stringify(qaResponsesParsed) : null,
         timezone || null, pageUrl || null, userAgent || null, utmMedium || null, utmSource || null,
         utmCampaign || null, utmContent || null, referrer, ipAddress
       ]
@@ -4843,6 +4857,14 @@ app.post('/api/consultation/submit', publicWriteLimiter, async (req, res) => {
 const NEWSLETTER_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 app.post('/api/newsletter/subscribe', publicWriteLimiter, async (req, res) => {
   try {
+    if (isHoneypotTriggered(req.body)) {
+      return res.json({
+        success: true,
+        status: 'subscribed',
+        message: "You're in! Check your inbox.",
+      });
+    }
+
     const rawEmail = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
     if (!rawEmail || rawEmail.length > 254 || !NEWSLETTER_EMAIL_RE.test(rawEmail)) {
       return res.status(400).json({ error: 'A valid email address is required.' });
@@ -5183,6 +5205,10 @@ app.get('/api/pricing/interactions/:sessionId', async (req, res) => {
 // Submit site feedback / ideas (public endpoint)
 app.post('/api/feedback/ideas', publicWriteLimiter, async (req, res) => {
   try {
+    if (isHoneypotTriggered(req.body)) {
+      return res.status(201).json({ success: true });
+    }
+
     const { name, email, category, message } = req.body;
 
     if (!name || !name.trim()) {

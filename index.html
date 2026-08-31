@@ -16,20 +16,20 @@
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), local-network=()" />
-    <title>Ondosoft | Custom Software, SaaS, and AI Engineering</title>
-    <meta name="description" content="Ondosoft is a US-based product team delivering custom software, SaaS platforms, and AI-enabled experiences with secure, scalable engineering." />
+    <title>Ondosoft | Product Engineering Teams to Build, Scale, and Modernize</title>
+    <meta name="description" content="Build, scale, and modernize software with a US-based engineering team that operates like your own. Custom web, SaaS, mobile, cloud, and AI engineering from Ondosoft in Lehi, Utah." />
     <link rel="canonical" href="https://ondosoft.com/" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://ondosoft.com/" />
-    <meta property="og:title" content="Ondosoft | Custom Software, SaaS, and AI Engineering" />
-    <meta property="og:description" content="Ondosoft is a US-based product team delivering custom software, SaaS platforms, and AI-enabled experiences with secure, scalable engineering." />
+    <meta property="og:title" content="Ondosoft | Product Engineering Teams to Build, Scale, and Modernize" />
+    <meta property="og:description" content="Build, scale, and modernize software with a US-based engineering team that operates like your own. Custom web, SaaS, mobile, cloud, and AI engineering from Ondosoft." />
     <meta property="og:image" content="https://ondosoft.com/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Ondosoft — custom software, SaaS, and AI engineering" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Ondosoft | Custom Software, SaaS, and AI Engineering" />
-    <meta name="twitter:description" content="Ondosoft is a US-based product team delivering custom software, SaaS platforms, and AI-enabled experiences with secure, scalable engineering." />
+    <meta name="twitter:title" content="Ondosoft | Product Engineering Teams to Build, Scale, and Modernize" />
+    <meta name="twitter:description" content="Build, scale, and modernize software with a US-based engineering team that operates like your own." />
     <meta name="twitter:image" content="https://ondosoft.com/og-image.png" />
     
     <!-- PWA Meta Tags (manifest is injected by vite-plugin-pwa) -->
@@ -80,9 +80,9 @@
     <link rel="preconnect" href="https://assets.calendly.com" crossorigin />
     
     <!-- Load fonts early with font-display: swap for better FCP/LCP -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Poppins:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'" />
     <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Poppins:wght@300;400;500;600;700&display=swap" />
     </noscript>
     
     <!-- Preload critical JavaScript modules (will be replaced by Vite build) -->
@@ -128,7 +128,7 @@
       <!-- Immediate fallback content for faster FCP -->
       <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#000 0%,#1f2937 100%);padding:2rem">
         <div style="text-align:center;max-width:800px">
-          <h1 style="font-size:clamp(2.5rem,5vw,4rem);font-weight:700;line-height:1.1;color:#fff;margin:0 0 1.5rem">Ondosoft – Trusted Software Development, On-Time Delivery</h1>
+          <h1 style="font-size:clamp(2.5rem,5vw,4rem);font-weight:700;line-height:1.1;color:#fff;margin:0 0 1.5rem">Build, scale, and modernize software with Ondosoft</h1>
           <p style="font-size:clamp(1.125rem,2vw,1.25rem);color:#d1d5db;margin:0">Loading...</p>
         </div>
       </div>
@@ -141,7 +141,7 @@
         "prefetch": [
           {
             "source": "list",
-            "urls": ["/services", "/contact", "/about", "/pricing", "/portfolio", "/blogs", "/faq"],
+            "urls": ["/solutions", "/case-studies", "/contact", "/about", "/insights", "/services", "/blogs"],
             "eagerness": "eager"
           },
           {
@@ -153,7 +153,7 @@
         "prerender": [
           {
             "source": "list",
-            "urls": ["/services"],
+            "urls": ["/solutions"],
             "eagerness": "moderate"
           }
         ]
@@ -163,7 +163,7 @@
     <script>
       if ('requestIdleCallback' in window) {
         requestIdleCallback(function() {
-          var routes = ['/services', '/contact', '/about', '/pricing', '/portfolio', '/blogs', '/faq'];
+          var routes = ['/solutions', '/case-studies', '/contact', '/about', '/insights', '/services', '/blogs'];
           routes.forEach(function(route) {
             var link = document.createElement('link');
             link.rel = 'prefetch';

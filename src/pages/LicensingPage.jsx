@@ -1,12 +1,9 @@
-import { useState, lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import SEOHead from '../components/SEOHead';
-// Lazy load heavy components
 const Footer = lazy(() => import('../components/Footer'));
-const CalendlyModal = lazy(() => import('../components/CalendlyModal'));
 import { companyInfo, getCanonicalUrl } from '../constants/companyInfo';
 
 const LicensingPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const canonical = getCanonicalUrl('/licensing');
   const structuredData = {
     "@context": "https://schema.org",
@@ -254,11 +251,6 @@ const LicensingPage = () => {
       <Suspense fallback={<div className="h-32" />}>
         <Footer />
       </Suspense>
-      {isModalOpen && (
-        <Suspense fallback={null}>
-          <CalendlyModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-        </Suspense>
-      )}
     </>
   );
 };

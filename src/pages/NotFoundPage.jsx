@@ -1,15 +1,11 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Home, ArrowLeft, Compass, AlertCircle, Sparkles, ArrowRight } from "lucide-react";
 import SEOHead from "../components/SEOHead";
-// Lazy load heavy components
-const CalendlyModal = lazy(() => import("../components/CalendlyModal"));
 const Footer = lazy(() => import("../components/Footer"));
 
 const NotFoundPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const navigate = useNavigate();
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -128,11 +124,6 @@ const NotFoundPage = () => {
         <Suspense fallback={<div className="h-32" />}>
           <Footer />
         </Suspense>
-        {isModalOpen && (
-          <Suspense fallback={null}>
-            <CalendlyModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-          </Suspense>
-        )}
       </div>
     </>
   );

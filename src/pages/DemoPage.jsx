@@ -1,5 +1,8 @@
+import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import SEOHead from '../components/SEOHead';
+
+const Footer = lazy(() => import('../components/Footer'));
 import {
   CreditCard,
   Megaphone,
@@ -316,6 +319,9 @@ const DemoPage = () => {
             </div>
           </div>
         </div>
+        <Suspense fallback={<div className="h-32" />}>
+          <Footer />
+        </Suspense>
       </div>
     </>
   );

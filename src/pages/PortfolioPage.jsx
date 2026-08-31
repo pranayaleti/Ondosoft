@@ -8,17 +8,7 @@ const Footer = lazy(() => import('../components/Footer'));
 import { ArrowRight, TrendingUp, Users, Clock, CheckCircle, Star, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import PMT from '../assets/PMT_optimized.webm';
 import { checklistItems } from '../constants/data';
-
-// Portfolio Images
-import techstartDashboard from '../assets/portfolio/techstart-dashboard.jpg';
-import techstartAnalytics from '../assets/portfolio/techstart-analytics.jpg';
-import techstartMobile from '../assets/portfolio/techstart-mobile.jpg';
-import retailmaxHomepage from '../assets/portfolio/retailmax-homepage.jpg';
-import retailmaxProduct from '../assets/portfolio/retailmax-product.jpg';
-import retailmaxCheckout from '../assets/portfolio/retailmax-checkout.jpg';
-import dataflowDashboard from '../assets/portfolio/dataflow-dashboard.jpg';
-import dataflowAnalytics from '../assets/portfolio/dataflow-analytics.jpg';
-import dataflowReports from '../assets/portfolio/dataflow-reports.jpg';
+import { caseStudies } from '../constants/caseStudies';
 
 const PortfolioPage = () => {
   const [selectedProject, setSelectedProject] = useState(0);
@@ -96,125 +86,7 @@ const PortfolioPage = () => {
     }
   };
 
-  const portfolioProjects = [
-    {
-      id: 1,
-      title: "TechStart Inc. - SaaS Platform Development",
-      client: "TechStart Inc.",
-      industry: "SaaS",
-      duration: "6 months",
-      team: "4 developers",
-      challenge: "Needed a scalable SaaS platform to handle 10,000+ users with subscription billing, multi-tenant architecture, and real-time analytics.",
-      solution: "Built a React-based SaaS platform with Node.js backend, PostgreSQL database, Stripe integration, and AWS deployment.",
-      results: {
-        users: "10,000+",
-        growth: "300%",
-        efficiency: "40%",
-        satisfaction: "4.9/5"
-      },
-      technologies: ["React", "Node.js", "PostgreSQL", "AWS", "Stripe"],
-      testimonial: "Ondosoft transformed our business. We went from 100 to 10,000+ users in just 6 months with zero downtime. The platform handles everything seamlessly.",
-      author: "Sarah Martinez",
-      role: "CEO, TechStart Inc.",
-      beforeAfter: {
-        before: {
-          users: "100",
-          revenue: "$5K/month",
-          efficiency: "60%",
-          issues: "Frequent downtime"
-        },
-        after: {
-          users: "10,000+",
-          revenue: "$50K/month",
-          efficiency: "95%",
-          issues: "Zero downtime"
-        }
-      },
-      screenshots: [
-        techstartDashboard,
-        techstartAnalytics,
-        techstartMobile
-      ]
-    },
-    {
-      id: 2,
-      title: "RetailMax - E-commerce Solution",
-      client: "RetailMax",
-      industry: "E-commerce",
-      duration: "4 months",
-      team: "3 developers",
-      challenge: "Legacy e-commerce system couldn't handle increased traffic and lacked modern features like mobile optimization and real-time inventory.",
-      solution: "Developed a modern e-commerce platform with React frontend, Node.js API, real-time inventory management, and mobile-first design.",
-      results: {
-        traffic: "500%",
-        sales: "250%",
-        mobile: "80%",
-        satisfaction: "4.8/5"
-      },
-      technologies: ["React", "Node.js", "MongoDB", "Stripe", "AWS"],
-      testimonial: "Our online sales increased by 250% in the first month after launch. The mobile experience is incredible and our customers love it.",
-      author: "Mike Chen",
-      role: "CTO, RetailMax",
-      beforeAfter: {
-        before: {
-          traffic: "1,000/day",
-          sales: "$10K/month",
-          mobile: "20%",
-          issues: "Poor mobile experience"
-        },
-        after: {
-          traffic: "5,000/day",
-          sales: "$35K/month",
-          mobile: "80%",
-          issues: "Excellent mobile UX"
-        }
-      },
-      screenshots: [
-        retailmaxHomepage,
-        retailmaxProduct,
-        retailmaxCheckout
-      ]
-    },
-    {
-      id: 3,
-      title: "DataFlow Solutions - Custom Web Application",
-      client: "DataFlow Solutions",
-      industry: "Data Analytics",
-      duration: "3 months",
-      team: "2 developers",
-      challenge: "Needed a custom data visualization dashboard to replace multiple disconnected tools and provide real-time insights.",
-      solution: "Created a comprehensive data analytics platform with interactive dashboards, real-time data processing, and automated reporting.",
-      results: {
-        efficiency: "60%",
-        insights: "Real-time",
-        reports: "Automated",
-        satisfaction: "5.0/5"
-      },
-      technologies: ["React", "D3.js", "Python", "PostgreSQL", "Docker"],
-      testimonial: "The new platform has revolutionized how we analyze data. What used to take hours now takes minutes, and the insights are incredible.",
-      author: "Emily Rodriguez",
-      role: "Data Director, DataFlow Solutions",
-      beforeAfter: {
-        before: {
-          efficiency: "40%",
-          insights: "Daily reports",
-          reports: "Manual",
-          issues: "Data silos"
-        },
-        after: {
-          efficiency: "95%",
-          insights: "Real-time",
-          reports: "Automated",
-          issues: "Unified platform"
-        }
-      },
-      screenshots: [
-        dataflowDashboard,
-        dataflowAnalytics,
-        dataflowReports
-      ]
-    }
-  ];
+  const portfolioProjects = caseStudies;
 
   const currentProject = portfolioProjects[selectedProject];
 
@@ -335,21 +207,23 @@ const PortfolioPage = () => {
                     Your browser does not support the video tag.
                   </video>
                 ) : (
-                  <div 
+                  <button
+                    type="button"
                     className="rounded-lg w-full border border-orange-700 shadow-sm shadow-orange-400 mx-auto cursor-pointer bg-gradient-to-br from-orange-500/10 to-orange-600/10 flex items-center justify-center"
                     style={{ aspectRatio: '16/9', minHeight: '300px' }}
                     onClick={() => setShouldLoadVideo(true)}
+                    aria-label="Play portfolio video"
                   >
                     <div className="text-center">
                       <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-500/20 flex items-center justify-center">
-                        <svg className="w-8 h-8 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-8 h-8 text-orange-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                           <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                         </svg>
                       </div>
                       <p className="text-white font-semibold mb-2">Click to play video</p>
                       <p className="text-neutral-400 text-sm">See our work in action</p>
                     </div>
-                  </div>
+                  </button>
                 )}
               </div>
               <div className="pt-12 w-full lg:w-1/2">
@@ -376,7 +250,9 @@ const PortfolioPage = () => {
               <h2 className="text-3xl font-bold text-white">Featured Projects</h2>
               <div className="flex items-center space-x-4">
                 <button
+                  type="button"
                   onClick={prevProject}
+                  aria-label="Previous project"
                   className="p-2 rounded-full border border-gray-600 hover:bg-gray-800 transition-colors"
                 >
                   <ChevronLeft className="h-5 w-5 text-white" />
@@ -385,7 +261,9 @@ const PortfolioPage = () => {
                   {selectedProject + 1} of {portfolioProjects.length}
                 </span>
                 <button
+                  type="button"
                   onClick={nextProject}
+                  aria-label="Next project"
                   className="p-2 rounded-full border border-gray-600 hover:bg-gray-800 transition-colors"
                 >
                   <ChevronRight className="h-5 w-5 text-white" />
@@ -458,6 +336,23 @@ const PortfolioPage = () => {
                     <h3 className="text-xl font-semibold text-white mb-4">Our Solution</h3>
                     <p className="text-gray-300 leading-relaxed">{currentProject.solution}</p>
                   </div>
+
+                  {currentProject.screenshots?.length > 0 && (
+                    <div>
+                      <h3 className="text-xl font-semibold text-white mb-4">Project Screenshots</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {currentProject.screenshots.map((src, index) => (
+                          <img
+                            key={`${currentProject.id}-${index}`}
+                            src={src}
+                            alt={`${currentProject.title} screenshot ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg border border-gray-700"
+                            loading="lazy"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Technologies */}
                   <div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, memo, useRef } from "react";
 import { Menu, X } from "lucide-react";
 import { navItems } from "../constants/data";
+import { BUILD_TEAM_PATH } from "../constants/productEngineering";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useModalA11y } from "../hooks/useModalA11y";
@@ -97,11 +98,12 @@ const Navbar = () => {
     // Prefetch the route component - using absolute paths from src/
     const routeMap = {
       '/': () => import('../pages/HomePage'),
-      '/portfolio': () => import('../pages/PortfolioPage'),
-      '/services': () => import('../pages/ServicesPage'),
-      '/pricing': () => import('../pages/PricingPage'),
+      '/solutions': () => import('../pages/SolutionsIndexPage'),
+      '/solutions/ai': () => import('../pages/SolutionPage'),
+      '/industries': () => import('../pages/IndustriesPage'),
+      '/case-studies': () => import('../pages/CaseStudiesPage'),
       '/about': () => import('../pages/AboutPage'),
-      '/blogs': () => import('../pages/BlogPage'),
+      '/insights': () => import('../pages/InsightsPage'),
       '/contact': () => import('../pages/ContactPage'),
     };
     const prefetchFn = routeMap[href];
@@ -112,8 +114,12 @@ const Navbar = () => {
 
   // Helper to determine if nav item is active - memoized
   const isActive = useCallback((href) => {
-    if (href === "/" && location.pathname === "/") return true;
-    return location.pathname === href;
+    const path = location.pathname;
+    if (href === "/") return path === "/";
+    if (href === "/solutions") {
+      return path === "/solutions" || (path.startsWith("/solutions/") && path !== "/solutions/ai");
+    }
+    return path === href || path.startsWith(`${href}/`);
   }, [location.pathname]);
 
   // Memoize nav items to prevent unnecessary re-renders
@@ -127,8 +133,8 @@ const Navbar = () => {
     <nav
       className={`sticky top-0 left-0 right-0 z-[60] w-full overflow-visible py-3 transition-all duration-300 ${
         scrolled
-          ? "backdrop-blur-lg border-b border-neutral-700/80 bg-white/95"
-          : "bg-white/90 border-transparent"
+          ? "backdrop-blur-lg border-b border-line bg-ink/90"
+          : "bg-ink/75 border-transparent"
       }`}
       style={{ paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}
     >
@@ -159,7 +165,7 @@ const Navbar = () => {
                   />
                 )}
               </div>
-              <span className="text-2xl font-bold text-gray-800 truncate">
+              <span className="text-2xl font-display font-semibold text-bone truncate">
                 Ondosoft
               </span>
             </Link>
@@ -176,8 +182,8 @@ const Navbar = () => {
                     onMouseEnter={() => handleNavHover(item.href)}
                     className={
                       isActive(item.href)
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white px-3 py-2 rounded-md font-semibold shadow-md"
-                        : "text-gray-700 hover:text-orange-500 hover:bg-orange-50 px-3 py-2 rounded-md transition-all duration-200 font-medium"
+                        ? "text-bone px-3 py-2 font-semibold border-b-2 border-ember"
+                        : "text-neutral-400 hover:text-bone px-3 py-2 font-medium"
                     }
                   >
                     {item.label}
@@ -190,24 +196,32 @@ const Navbar = () => {
                 <>
                   <Link
                     to={user?.role === 'ADMIN' ? '/admin' : '/dashboard'}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2 px-4 rounded-md font-semibold shadow-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200"
+                    className="bg-ember text-white py-2 px-4 rounded-sm font-semibold hover:bg-orange-600"
                   >
                     {user?.role === 'ADMIN' ? 'Admin' : 'Dashboard'}
                   </Link>
                   <button
                     onClick={handleSignOut}
-                    className="text-gray-700 hover:text-orange-500 font-medium"
+                    className="text-neutral-400 hover:text-bone font-medium"
                   >
                     Sign Out
                   </button>
                 </>
               ) : (
-                <Link
-                  to="/auth/signin"
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2 px-4 rounded-md font-semibold shadow-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200"
-                >
-                  Sign In
-                </Link>
+                <>
+                  <Link
+                    to="/auth/signin"
+                    className="text-neutral-400 hover:text-bone font-medium"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to={BUILD_TEAM_PATH}
+                    className="bg-ember text-white py-2 px-4 rounded-sm font-semibold hover:bg-orange-600"
+                  >
+                    Build My Team
+                  </Link>
+                </>
               )}
             </div>
           </div>
@@ -217,7 +231,7 @@ const Navbar = () => {
             <button 
               type="button"
               onClick={toggleNavbar}
-              className="text-gray-700 hover:text-orange-500 p-2 rounded-md hover:bg-orange-50 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="text-bone hover:text-ember p-2 rounded-md min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-expanded={mobileDrawerOpen}
               aria-controls={MOBILE_DRAWER_ID}
               aria-label={mobileDrawerOpen ? 'Close menu' : 'Open menu'}
@@ -242,12 +256,16 @@ const Navbar = () => {
               aria-modal="true"
               aria-label="Site navigation"
               tabIndex={-1}
-              className="fixed top-0 right-0 z-[70] w-80 min-h-screen bg-gradient-to-b from-black to-gray-900 shadow-xl transition-transform duration-300 ease-in-out overflow-y-auto outline-none"
+              className="fixed inset-0 z-[70] w-full min-h-screen bg-ink shadow-xl overflow-y-auto outline-none"
               style={{ touchAction: 'pan-y', paddingRight: 'env(safe-area-inset-right)', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center">
+                  <Link
+                    to="/"
+                    onClick={handleLogoClick}
+                    className="flex items-center"
+                  >
                     <div className="h-12 w-12 mr-3 rounded-full overflow-hidden bg-white flex items-center justify-center">
                       {logoFailed ? (
                         <div className="h-full w-full bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
@@ -267,7 +285,7 @@ const Navbar = () => {
                       )}
                     </div>
                     <span className="text-xl font-bold text-white">Ondosoft</span>
-                  </div>
+                  </Link>
                   <button
                     ref={drawerCloseBtnRef}
                     type="button"
@@ -316,13 +334,22 @@ const Navbar = () => {
                       </button>
                     </>
                   ) : (
-                    <Link
-                      to="/auth/signin"
-                      onClick={() => setMobileDrawerOpen(false)}
-                      className="w-full min-h-[48px] py-3 px-4 rounded-md bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold text-center hover:from-orange-600 hover:to-orange-700 transition-all duration-200 flex items-center justify-center"
-                    >
-                      Sign In
-                    </Link>
+                    <>
+                      <Link
+                        to={BUILD_TEAM_PATH}
+                        onClick={() => setMobileDrawerOpen(false)}
+                        className="w-full min-h-[48px] py-3 px-4 rounded-sm bg-ember text-white font-semibold text-center hover:bg-orange-600 flex items-center justify-center"
+                      >
+                        Build My Team
+                      </Link>
+                      <Link
+                        to="/auth/signin"
+                        onClick={() => setMobileDrawerOpen(false)}
+                        className="w-full min-h-[48px] py-3 px-4 rounded-sm bg-steel text-bone font-semibold text-center hover:bg-line flex items-center justify-center"
+                      >
+                        Sign In
+                      </Link>
+                    </>
                   )}
                 </div>
               </div>

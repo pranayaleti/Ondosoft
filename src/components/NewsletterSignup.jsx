@@ -1,9 +1,12 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { Send, AlertCircle, CheckCircle2 } from "lucide-react";
 import { API_URL } from "../utils/apiConfig.js";
+import { rateLimiter, isValidEmail } from "../utils/security.js";
+import HoneypotField from "./HoneypotField";
 
 const NewsletterSignup = () => {
   const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState("");
   const [status, setStatus] = useState("idle"); // idle | loading | success | already | error
   const [message, setMessage] = useState("");
   const abortRef = useRef(null);
@@ -20,7 +23,27 @@ const NewsletterSignup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const trimmed = email.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      setStatus("error");
+      setMessage("Please enter your email address.");
+      return;
+    }
+    if (!isValidEmail(trimmed)) {
+      setStatus("error");
+      setMessage("Please enter a valid email address.");
+      return;
+    }
+    if (website) {
+      setStatus("success");
+      setMessage("You're in! Check your inbox.");
+      setEmail("");
+      return;
+    }
+    if (!rateLimiter.isAllowed("newsletter-form")) {
+      setStatus("error");
+      setMessage("Too many requests. Please wait a minute and try again.");
+      return;
+    }
 
     setStatus("loading");
     const controller = new AbortController();
@@ -30,7 +53,7 @@ const NewsletterSignup = () => {
       const res = await fetch(`${API_URL}/newsletter/subscribe`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmed }),
+        body: JSON.stringify({ email: trimmed, website }),
         signal: controller.signal,
       });
       const data = await res.json().catch(() => ({}));
@@ -69,7 +92,7 @@ const NewsletterSignup = () => {
             Get Engineering Insights
           </h2>
           <p className="text-gray-400 max-w-lg mx-auto mb-8 relative z-10">
-            Join 2,000+ founders and CTOs who receive our bi-weekly digest on product engineering, scaling, and AI integration.
+            A short digest on product engineering, scaling, and AI integration. No fluff — just what we are shipping and learning.
           </p>
 
           {status === "success" ? (
@@ -99,6 +122,11 @@ const NewsletterSignup = () => {
                 data-testid="newsletter-form"
                 className="relative z-10 flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto"
               >
+                <HoneypotField
+                  id="newsletter-website"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                />
                 <label htmlFor="newsletter-email" className="sr-only">
                   Email address
                 </label>
@@ -145,7 +173,7 @@ const NewsletterSignup = () => {
             </>
           )}
 
-          <p className="text-xs text-gray-600 mt-4 relative z-10">
+          <p className="text-xs text-gray-400 mt-4 relative z-10">
             No spam. Unsubscribe anytime.
           </p>
         </div>

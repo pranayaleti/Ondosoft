@@ -1,5 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
 import { companyInfo } from '../constants/companyInfo';
 
 // The global <SchemaMarkup /> in App.jsx emits Organization / Website /
@@ -9,8 +10,8 @@ import { companyInfo } from '../constants/companyInfo';
 // graph from SEOHead to avoid conflicting Organization/Service duplicates.
 
 const SEOHead = ({
-  title = 'Ondosoft | Custom Software, SaaS, and AI Engineering',
-  description = 'Ondosoft is a US-based product team delivering custom software, SaaS platforms, and AI-enabled experiences with secure, scalable engineering.',
+  title = 'Ondosoft | Product Engineering Teams to Build, Scale, and Modernize',
+  description = 'Build, scale, and modernize software with a US-based engineering team that operates like your own. Custom web, SaaS, mobile, cloud, and AI engineering from Ondosoft in Lehi, Utah.',
   keywords,
   canonicalUrl,
   ogImage,
@@ -20,7 +21,11 @@ const SEOHead = ({
   structuredData = null,
   noIndex = false,
 }) => {
-  const finalCanonicalUrl = canonicalUrl || companyInfo.urls.website;
+  const { pathname } = useLocation();
+  const isPrivateSurface =
+    pathname.startsWith('/admin') || pathname.startsWith('/dashboard');
+  const shouldNoIndex = noIndex || isPrivateSurface;
+  const finalCanonicalUrl = canonicalUrl || `${companyInfo.urls.website}/`;
   const finalOgImage = ogImage || `${companyInfo.urls.website}${companyInfo.ogImage.path}`;
   const finalKeywords = keywords || 'ondosoft, custom software development, SaaS development, AI engineering, React, Node.js, Python';
 
@@ -34,7 +39,7 @@ const SEOHead = ({
       <meta name="keywords" content={finalKeywords} />
       <link rel="canonical" href={finalCanonicalUrl} />
 
-      {noIndex ? (
+      {shouldNoIndex ? (
         <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
       ) : (
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />

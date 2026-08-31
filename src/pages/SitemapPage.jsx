@@ -1,14 +1,11 @@
-import { useState, lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import SEOHead from '../components/SEOHead';
-// Lazy load heavy components
 const Footer = lazy(() => import('../components/Footer'));
-const CalendlyModal = lazy(() => import('../components/CalendlyModal'));
 import { Link } from 'react-router-dom';
 import { SERVICE_AREAS } from '../utils/unifiedData.js';
 import { companyInfo, getCanonicalUrl } from '../constants/companyInfo';
 
 const SitemapPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const canonical = getCanonicalUrl('/sitemap');
   const structuredData = {
     "@context": "https://schema.org",
@@ -82,6 +79,22 @@ const SitemapPage = () => {
                       <h3 className="text-lg font-semibold text-white mb-1">About Us</h3>
                       <p className="text-sm text-gray-400">Learn about Ondosoft</p>
                     </Link>
+                    <Link to="/solutions" className="block p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700">
+                      <h3 className="text-lg font-semibold text-white mb-1">Solutions</h3>
+                      <p className="text-sm text-gray-400">Product engineering lanes</p>
+                    </Link>
+                    <Link to="/industries" className="block p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700">
+                      <h3 className="text-lg font-semibold text-white mb-1">Industries</h3>
+                      <p className="text-sm text-gray-400">Sectors we already name</p>
+                    </Link>
+                    <Link to="/case-studies" className="block p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700">
+                      <h3 className="text-lg font-semibold text-white mb-1">Case Studies</h3>
+                      <p className="text-sm text-gray-400">Problem, solution, result</p>
+                    </Link>
+                    <Link to="/insights" className="block p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700">
+                      <h3 className="text-lg font-semibold text-white mb-1">Insights</h3>
+                      <p className="text-sm text-gray-400">Studio writing and blog hub</p>
+                    </Link>
                     <Link to="/services" className="block p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700">
                       <h3 className="text-lg font-semibold text-white mb-1">Services</h3>
                       <p className="text-sm text-gray-400">Our service offerings</p>
@@ -117,6 +130,10 @@ const SitemapPage = () => {
                     <Link to="/faq" className="block p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700">
                       <h3 className="text-lg font-semibold text-white mb-1">FAQ</h3>
                       <p className="text-sm text-gray-400">Frequently asked questions</p>
+                    </Link>
+                    <Link to="/capabilities-deck" className="block p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700">
+                      <h3 className="text-lg font-semibold text-white mb-1">Capabilities Deck</h3>
+                      <p className="text-sm text-gray-400">Services, process, and how we ship</p>
                     </Link>
                   </div>
                 </div>
@@ -157,13 +174,13 @@ const SitemapPage = () => {
                   <h2 className="text-3xl font-bold text-white mb-6">Service Areas by State</h2>
                   <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
                     <p className="text-gray-300 mb-4">
-                      Ondosoft provides software development services across all 50 states. Click on any state to view our services in that area.
+                      Ondosoft provides software development services across all 50 states. Browse our offerings on the services page.
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                       {SERVICE_AREAS.states.slice(0, 20).map((state) => (
                         <Link
                           key={state.slug}
-                          to={`/services/${state.slug}`}
+                          to="/services"
                           className="text-orange-500 hover:text-orange-400 hover:underline text-sm"
                         >
                           {state.name}
@@ -183,13 +200,13 @@ const SitemapPage = () => {
                   <h2 className="text-3xl font-bold text-white mb-6">Top Cities</h2>
                   <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
                     <p className="text-gray-300 mb-4">
-                      We serve major metropolitan areas across the United States. Select a city to learn more about our services in that location.
+                      We serve major metropolitan areas across the United States. See how we work with teams nationwide.
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                       {SERVICE_AREAS.topCities.slice(0, 24).map((city) => (
                         <Link
                           key={city.slug}
-                          to={`/services/${city.slug}`}
+                          to="/services"
                           className="text-orange-500 hover:text-orange-400 hover:underline text-sm"
                         >
                           {city.displayName}
@@ -208,34 +225,34 @@ const SitemapPage = () => {
                 <div>
                   <h2 className="text-3xl font-bold text-white mb-6">Our Services</h2>
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+                    <Link to="/services" className="p-4 bg-gray-800 rounded-lg border border-gray-700 hover:bg-gray-700 transition-colors">
                       <h3 className="text-lg font-semibold text-white mb-2">Custom Projects</h3>
                       <p className="text-sm text-gray-400">Software development for any project type</p>
-                    </div>
-                    <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+                    </Link>
+                    <Link to="/services" className="p-4 bg-gray-800 rounded-lg border border-gray-700 hover:bg-gray-700 transition-colors">
                       <h3 className="text-lg font-semibold text-white mb-2">AI & Video Code</h3>
                       <p className="text-sm text-gray-400">Complete AI-generated or tutorial code</p>
-                    </div>
-                    <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+                    </Link>
+                    <Link to="/services" className="p-4 bg-gray-800 rounded-lg border border-gray-700 hover:bg-gray-700 transition-colors">
                       <h3 className="text-lg font-semibold text-white mb-2">Full Stack Development</h3>
                       <p className="text-sm text-gray-400">End-to-end web application development</p>
-                    </div>
-                    <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+                    </Link>
+                    <Link to="/services" className="p-4 bg-gray-800 rounded-lg border border-gray-700 hover:bg-gray-700 transition-colors">
                       <h3 className="text-lg font-semibold text-white mb-2">SaaS Applications</h3>
                       <p className="text-sm text-gray-400">Software as a Service platform development</p>
-                    </div>
-                    <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+                    </Link>
+                    <Link to="/services" className="p-4 bg-gray-800 rounded-lg border border-gray-700 hover:bg-gray-700 transition-colors">
                       <h3 className="text-lg font-semibold text-white mb-2">Web Development</h3>
                       <p className="text-sm text-gray-400">Modern web application development</p>
-                    </div>
-                    <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+                    </Link>
+                    <Link to="/services" className="p-4 bg-gray-800 rounded-lg border border-gray-700 hover:bg-gray-700 transition-colors">
                       <h3 className="text-lg font-semibold text-white mb-2">Mobile Apps</h3>
                       <p className="text-sm text-gray-400">Native and cross-platform mobile development</p>
-                    </div>
-                    <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+                    </Link>
+                    <Link to="/services" className="p-4 bg-gray-800 rounded-lg border border-gray-700 hover:bg-gray-700 transition-colors">
                       <h3 className="text-lg font-semibold text-white mb-2">Cloud Deployment</h3>
                       <p className="text-sm text-gray-400">Cloud infrastructure and deployment services</p>
-                    </div>
+                    </Link>
                   </div>
                 </div>
 
@@ -265,11 +282,6 @@ const SitemapPage = () => {
       <Suspense fallback={<div className="h-32" />}>
         <Footer />
       </Suspense>
-      {isModalOpen && (
-        <Suspense fallback={null}>
-          <CalendlyModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-        </Suspense>
-      )}
     </>
   );
 };

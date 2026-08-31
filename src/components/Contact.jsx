@@ -11,6 +11,8 @@ import {
 } from "../utils/security.js";
 import { companyInfo } from "../constants/companyInfo";
 import { API_URL } from "../utils/apiConfig.js";
+import HoneypotField from "./HoneypotField";
+import { readAssessment } from "../utils/contactIntent.js";
 
 const PROJECT_TYPES = [
   { value: "", label: "Select a project type" },
@@ -32,6 +34,7 @@ const Contact = () => {
     company: "",
     projectType: "",
     message: "",
+    website: "",
   });
   const [selectedPackage, setSelectedPackage] = useState("");
   const [selectedPrice, setSelectedPrice] = useState("");
@@ -67,6 +70,41 @@ const Contact = () => {
         projectType,
         message: `I'm interested in the ${decodedPackage} package (${decodedPrice}). Please share next steps.`,
       }));
+    } else {
+      const intent = urlParams.get("intent");
+      const source = urlParams.get("source");
+      const related = urlParams.get("related");
+      if (intent === "assessment") {
+        const assessment = readAssessment();
+        const score = urlParams.get("score") || assessment?.score;
+        const opportunities = assessment?.opportunities?.join("\n") || "";
+        setFormData((prev) => ({
+          ...prev,
+          projectType: prev.projectType || "other",
+          message:
+            prev.message ||
+            `I'd like a follow-up on my engineering health assessment${score ? ` (score: ${score}/100)` : ""}.${
+              opportunities ? `\n\nTop opportunities:\n${opportunities}` : ""
+            }${source ? `\n\nSource: ${source}` : ""}`,
+        }));
+      } else if (intent === "modernize") {
+        setFormData((prev) => ({
+          ...prev,
+          projectType: prev.projectType || "other",
+          message:
+            prev.message ||
+            "I'd like to talk with an engineering director about modernizing a legacy system.",
+        }));
+      } else if (intent === "build-team") {
+        setFormData((prev) => ({
+          ...prev,
+          message:
+            prev.message ||
+            `I'd like to build an engineering team with Ondosoft.${
+              related ? ` Related work: ${related}.` : ""
+            }${source ? ` (from ${source})` : ""}`,
+        }));
+      }
     }
 
     return () => {
@@ -114,6 +152,12 @@ const Contact = () => {
       return;
     }
 
+    if (formData.website) {
+      setSubmitStatus("success");
+      setFormData({ name: "", email: "", phone: "", company: "", projectType: "", message: "", website: "" });
+      return;
+    }
+
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -121,18 +165,24 @@ const Contact = () => {
     abortRef.current = controller;
 
     try {
+      const projectLabel = PROJECT_TYPES.find((opt) => opt.value === formData.projectType)?.label;
       const payload = {
         name: sanitizeInput(formData.name),
         email: sanitizeInput(formData.email),
         phone: sanitizeInput(formData.phone),
         company: sanitizeInput(formData.company),
+        projectType: formData.projectType || undefined,
         message: sanitizeInput(formData.message),
         selectedPlan: selectedPackage || undefined,
         selectedPlanPrice: selectedPrice || undefined,
         pageUrl: typeof window !== "undefined" ? window.location.href : undefined,
         userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        website: formData.website,
       };
+      if (projectLabel && formData.projectType) {
+        payload.message = `Project type: ${projectLabel}\n\n${payload.message}`;
+      }
 
       const res = await fetch(`${API_URL}/consultation/submit`, {
         method: "POST",
@@ -154,7 +204,7 @@ const Contact = () => {
       }
 
       setSubmitStatus("success");
-      setFormData({ name: "", email: "", phone: "", company: "", projectType: "", message: "" });
+      setFormData({ name: "", email: "", phone: "", company: "", projectType: "", message: "", website: "" });
     } catch (err) {
       if (err.name === "AbortError") return;
       if (!isMountedRef.current) return;
@@ -171,13 +221,13 @@ const Contact = () => {
 
   return (
     <div className="mt-20" id="contact">
-      <h2 className="text-3xl sm:text-5xl lg:text-6xl text-center my-8 tracking-wide">
+      <h1 className="text-3xl sm:text-5xl lg:text-6xl text-center my-8 tracking-wide">
         <span className="text-white">Let&rsquo;s Build Your</span>
         <br />
         <span className="bg-gradient-to-r from-orange-400 to-orange-600 text-transparent bg-clip-text drop-shadow-lg">
           Next Big Thing.
         </span>
-      </h2>
+      </h1>
       <p className="text-center text-neutral-200 text-lg mb-8 max-w-3xl mx-auto leading-relaxed px-4">
         Book a call or drop a message &mdash; we&rsquo;ll respond within one business day.
       </p>
@@ -219,9 +269,14 @@ const Contact = () => {
       <form
         onSubmit={handleSubmit}
         noValidate
-        className="max-w-4xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-5"
+        className="relative max-w-4xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-5"
       >
         <input type="hidden" name="csrf" value={csrfToken} readOnly />
+        <HoneypotField
+          id="contact-website"
+          value={formData.website}
+          onChange={handleInputChange}
+        />
 
         <div>
           <label htmlFor="contact-name" className="block text-sm font-medium text-neutral-200 mb-2">

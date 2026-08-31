@@ -197,7 +197,7 @@ export const validationRules = {
     required: true,
     minLength: 2,
     maxLength: 50,
-    pattern: /^[a-zA-Z\s]+$/
+    pattern: /^[a-zA-Z\s\-'.]+$/
   },
   email: {
     required: true,

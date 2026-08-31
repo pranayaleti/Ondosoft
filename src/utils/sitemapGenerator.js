@@ -8,12 +8,24 @@ export const generateSitemap = () => {
 
   const mainPages = [
     { url: '/', priority: '1.0', changefreq: 'weekly', lastmod: today },
-    { url: '/services', priority: '0.9', changefreq: 'weekly', lastmod: today },
+    { url: '/solutions', priority: '0.9', changefreq: 'weekly', lastmod: today },
+    { url: '/solutions/product-engineering', priority: '0.9', changefreq: 'monthly', lastmod: today },
+    { url: '/solutions/dedicated-teams', priority: '0.9', changefreq: 'monthly', lastmod: today },
+    { url: '/solutions/ai', priority: '0.9', changefreq: 'monthly', lastmod: today },
+    { url: '/solutions/legacy-modernization', priority: '0.8', changefreq: 'monthly', lastmod: today },
+    { url: '/solutions/cloud-devops', priority: '0.8', changefreq: 'monthly', lastmod: today },
+    { url: '/solutions/web-mobile', priority: '0.8', changefreq: 'monthly', lastmod: today },
+    { url: '/case-studies', priority: '0.8', changefreq: 'monthly', lastmod: today },
+    { url: '/case-studies/techstart-saas-platform', priority: '0.7', changefreq: 'monthly', lastmod: today },
+    { url: '/case-studies/retailmax-ecommerce', priority: '0.7', changefreq: 'monthly', lastmod: today },
+    { url: '/case-studies/dataflow-analytics', priority: '0.7', changefreq: 'monthly', lastmod: today },
+    { url: '/industries', priority: '0.8', changefreq: 'monthly', lastmod: today },
+    { url: '/insights', priority: '0.8', changefreq: 'weekly', lastmod: today },
+    { url: '/services', priority: '0.8', changefreq: 'weekly', lastmod: today },
     { url: '/pricing', priority: '0.8', changefreq: 'monthly', lastmod: today },
     { url: '/testimonials', priority: '0.6', changefreq: 'monthly', lastmod: today },
     { url: '/portfolio', priority: '0.8', changefreq: 'monthly', lastmod: today },
     { url: '/contact', priority: '0.7', changefreq: 'monthly', lastmod: today },
-    { url: '/demo', priority: '0.6', changefreq: 'monthly', lastmod: today },
     { url: '/feedback', priority: '0.7', changefreq: 'monthly', lastmod: today },
     { url: '/about', priority: '0.6', changefreq: 'monthly', lastmod: today },
     { url: '/faq', priority: '0.6', changefreq: 'monthly', lastmod: today },
@@ -37,15 +49,10 @@ export const generateSitemap = () => {
   mainPages.forEach(page => {
     sitemap += `
   <url>
-    <loc>${baseUrl}${page.url}</loc>
+    <loc>${baseUrl}${page.url === '/' ? '/' : page.url}</loc>
     <lastmod>${page.lastmod}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
-    <image:image>
-      <image:loc>${baseUrl}/logo.png</image:loc>
-      <image:title>Ondosoft - Full Stack Software Development</image:title>
-      <image:caption>Ondosoft logo for software development services</image:caption>
-    </image:image>
   </url>`;
   });
 
@@ -82,11 +89,14 @@ export const generateBlogSitemap = () => {
     <changefreq>monthly</changefreq>
     <priority>${post.featured ? '0.9' : '0.7'}</priority>`;
 
-    if (post.featuredImage || post.socialImage || post.image) {
-      const imageUrl = post.featuredImage || post.socialImage || post.image;
+    const imageCandidates = [post.socialImage, post.featuredImage, post.image];
+    const imageUrl = imageCandidates.find(
+      (url) => typeof url === 'string' && /^https?:\/\//.test(url)
+    );
+    if (imageUrl) {
       sitemap += `
     <image:image>
-      <image:loc>${imageUrl.startsWith('http') ? imageUrl : `${baseUrl}${imageUrl}`}</image:loc>
+      <image:loc>${imageUrl}</image:loc>
       <image:title>${post.title}</image:title>
       <image:caption>${post.excerpt || post.metaDescription || ''}</image:caption>
     </image:image>`;
@@ -130,6 +140,7 @@ Disallow: /dashboard/
 Disallow: /portal/
 Disallow: /auth/
 Disallow: /reset-password
+Disallow: /demo
 Disallow: /api/
 
 Allow: /sitemap.xml

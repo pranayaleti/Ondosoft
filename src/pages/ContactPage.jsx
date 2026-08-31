@@ -67,9 +67,9 @@ const ContactPage = () => {
               <p className="text-sm font-semibold uppercase tracking-wide text-orange-400">
                 Book instantly
               </p>
-              <h3 className="text-2xl md:text-3xl font-bold text-white">
+              <h2 className="text-2xl md:text-3xl font-bold text-white">
                 See live availability and lock a time without leaving this page.
-              </h3>
+              </h2>
               <p className="text-gray-300 max-w-3xl">
                 We’ll meet for 30 minutes to map your goals, timeline, and budget. Choose any open
                 slot below—your timezone is auto-detected by Calendly.

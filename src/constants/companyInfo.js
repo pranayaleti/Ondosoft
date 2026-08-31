@@ -32,8 +32,9 @@ export const companyInfo = {
     twitter: "https://twitter.com/ondosoft",
     instagram: "https://instagram.com/ondosoft",
   },
-  foundingDate: "2020", // Year only for schema markup
-  foundingDateDisplay: "April 2022", // Human-readable format
+  foundingDate: "2022-04-01",
+  foundingDateDisplay: "April 2022",
+  legalLastUpdated: "August 21, 2026",
   // Geographic coordinates
   coordinates: {
     latitude: "40.3916",
@@ -103,8 +104,9 @@ export const companyInfo = {
 // Helper function to generate canonical URL
 export function getCanonicalUrl(path = '') {
   const baseUrl = companyInfo.urls.website;
+  if (!path || path === '/') return `${baseUrl}/`;
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return path ? `${baseUrl}${cleanPath}` : baseUrl;
+  return `${baseUrl}${cleanPath}`;
 }
 
 export function getPostalAddressSchema() {

@@ -9,6 +9,7 @@ Disallow: /dashboard/
 Disallow: /portal/
 Disallow: /auth/
 Disallow: /reset-password
+Disallow: /demo
 Disallow: /api/
 
 Allow: /sitemap.xml

@@ -487,13 +487,13 @@ export const SERVICE_AREAS = {
   // Get all service area URLs for sitemap
   getServiceAreaUrls: () => [
     ...STATES.map(state => ({
-      url: `/services/${state.slug}`,
+      url: `/services`,
       priority: '0.6',
       changefreq: 'monthly',
       lastmod: new Date().toISOString().split('T')[0]
     })),
     ...TOP_CITIES.map(city => ({
-      url: `/services/${city.slug}`,
+      url: `/services`,
       priority: '0.7',
       changefreq: 'monthly',
       lastmod: new Date().toISOString().split('T')[0]
@@ -534,13 +534,13 @@ export const SERVICE_AREAS = {
       name: state.name,
       slug: state.slug,
       linkText: `Software development services in ${state.name} - Custom projects, full stack development, and SaaS solutions`,
-      url: `/services/${state.slug}`
+      url: `/services`
     })),
     cities: TOP_CITIES.map(city => ({
       name: city.displayName,
       slug: city.slug,
       linkText: `Custom software projects and full stack development in ${city.displayName} - Web, mobile, and SaaS solutions`,
-      url: `/services/${city.slug}`
+      url: `/services`
     }))
   }),
   
@@ -589,7 +589,7 @@ export const generateAllCityServiceCombinations = () => {
         stateName: city.stateName,
         county: city.county,
         service,
-        url: `/services/${service}/${generateCitySlug(city.city)}-${generateStateSlug(city.state)}`
+        url: `/services`
       });
     });
   });
