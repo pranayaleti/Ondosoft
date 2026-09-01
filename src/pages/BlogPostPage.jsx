@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import SEOHead from '../components/SEOHead';
 import BlogCard from '../components/BlogCard';
 import ShareButtons from '../components/ShareButtons';
@@ -25,7 +25,9 @@ function formatInlineMarkdown(text) {
 
 const BlogPostPage = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [heroFailed, setHeroFailed] = useState(false);
   const [blogData, setBlogData] = useState(null);
   const [post, setPost] = useState(null);
   const [postLoading, setPostLoading] = useState(true);
@@ -46,6 +48,7 @@ const BlogPostPage = () => {
     setRelatedPosts([]);
     setCategoryName(null);
     setPostLoading(true);
+    setHeroFailed(false);
 
     let cancelled = false;
 
@@ -59,7 +62,12 @@ const BlogPostPage = () => {
         setPostLoading(false);
       })
       .catch(() => {
-        if (!cancelled && slugRef.current === currentSlug) setPostLoading(false);
+        if (!cancelled && slugRef.current === currentSlug) {
+          setBlogData({ blogCategories: [] });
+          setPost(null);
+          setRelatedPosts([]);
+          setPostLoading(false);
+        }
       });
 
     return () => {
@@ -143,13 +151,13 @@ const BlogPostPage = () => {
       <>
         <SEOHead
           title="Post Not Found | Ondosoft Blogs"
-          description="The article you're looking for doesn't exist."
+          description="The article you are looking for does not exist."
           noIndex={true}
         />
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-white mb-4">Post Not Found</h1>
-            <p className="text-gray-200 mb-8">The article you're looking for doesn't exist.</p>
+            <p className="text-gray-200 mb-8">The article you are looking for does not exist.</p>
             <Link
               to="/blogs"
               className="bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors"
@@ -252,6 +260,27 @@ const BlogPostPage = () => {
     return elements;
   };
 
+  const onArticleClick = (event) => {
+    const anchor = event.target.closest('a');
+    if (
+      !anchor
+      || event.defaultPrevented
+      || event.button !== 0
+      || event.metaKey
+      || event.ctrlKey
+      || event.shiftKey
+      || event.altKey
+    ) {
+      return;
+    }
+    const href = anchor.getAttribute('href');
+    if (!href || !href.startsWith('/') || href.startsWith('//')) return;
+    event.preventDefault();
+    navigate(href);
+  };
+
+  const heroSrc = post.image ?? post.featuredImage ?? '';
+
   return (
     <>
       <SEOHead
@@ -281,7 +310,7 @@ const BlogPostPage = () => {
         </div>
 
         {/* Article Header */}
-        <article className="max-w-4xl mx-auto px-4 py-12">
+        <article className="max-w-4xl mx-auto px-4 py-12" onClick={onArticleClick}>
           {/* Category */}
           <div className="mb-4">
             <span className="bg-orange-500/20 text-orange-400 px-3 py-1 rounded-full text-sm font-medium border border-orange-500/30">
@@ -318,12 +347,19 @@ const BlogPostPage = () => {
           )}
 
           {/* Featured Image */}
-          <div className="mb-8">
-            <img
-              src={post.image ?? post.featuredImage ?? ''}
-              alt={post.title}
-              className="w-full h-64 md:h-96 object-cover rounded-xl"
-            />
+          <div className="mb-8 relative overflow-hidden rounded-xl bg-gray-800 h-64 md:h-96">
+            {heroSrc && !heroFailed ? (
+              <img
+                src={heroSrc}
+                alt={post.title}
+                className="w-full h-64 md:h-96 object-cover rounded-xl"
+                onError={() => setHeroFailed(true)}
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-6xl font-bold">
+                {post.title.charAt(0)}
+              </div>
+            )}
           </div>
 
           {/* Content - Gestalt: Proximity, Continuity, Figure/Ground */}

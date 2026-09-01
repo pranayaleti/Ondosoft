@@ -13,10 +13,22 @@ const MST_TIMEZONE = 'America/Denver';
  * @param {Object} options - Intl.DateTimeFormat options
  * @returns {string} Formatted date string
  */
+function toDate(date) {
+  if (date instanceof Date) return date;
+  if (typeof date === 'string') {
+    const dayStamp = date.trim().match(/^(\d{4}-\d{2}-\d{2})/);
+    if (dayStamp) {
+      const [year, month, day] = dayStamp[1].split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+  }
+  return new Date(date);
+}
+
 export const formatDateUserTimezone = (date, options = {}) => {
   if (!date) return 'N/A';
   
-  const dateObj = date instanceof Date ? date : new Date(date);
+  const dateObj = toDate(date);
   if (isNaN(dateObj.getTime())) return 'Invalid Date';
   
   const defaultOptions = {
@@ -38,7 +50,7 @@ export const formatDateUserTimezone = (date, options = {}) => {
 export const formatDateTimeUserTimezone = (date, options = {}) => {
   if (!date) return 'N/A';
   
-  const dateObj = date instanceof Date ? date : new Date(date);
+  const dateObj = toDate(date);
   if (isNaN(dateObj.getTime())) return 'Invalid Date';
   
   const defaultOptions = {
@@ -63,7 +75,7 @@ export const formatDateTimeUserTimezone = (date, options = {}) => {
 export const formatDateMST = (date, options = {}) => {
   if (!date) return 'N/A';
   
-  const dateObj = date instanceof Date ? date : new Date(date);
+  const dateObj = toDate(date);
   if (isNaN(dateObj.getTime())) return 'Invalid Date';
   
   const defaultOptions = {
@@ -86,7 +98,7 @@ export const formatDateMST = (date, options = {}) => {
 export const formatDateTimeMST = (date, options = {}) => {
   if (!date) return 'N/A';
   
-  const dateObj = date instanceof Date ? date : new Date(date);
+  const dateObj = toDate(date);
   if (isNaN(dateObj.getTime())) return 'Invalid Date';
   
   const defaultOptions = {
@@ -127,7 +139,7 @@ export const formatDate = (date, options = {}, includeTime = false, isAdmin = fa
 export const formatDateWithWeekdayUser = (date) => {
   if (!date) return 'N/A';
   
-  const dateObj = date instanceof Date ? date : new Date(date);
+  const dateObj = toDate(date);
   if (isNaN(dateObj.getTime())) return 'Invalid Date';
   
   return dateObj.toLocaleString(undefined, {
@@ -148,7 +160,7 @@ export const formatDateWithWeekdayUser = (date) => {
 export const formatDateWithWeekdayMST = (date) => {
   if (!date) return 'N/A';
   
-  const dateObj = date instanceof Date ? date : new Date(date);
+  const dateObj = toDate(date);
   if (isNaN(dateObj.getTime())) return 'Invalid Date';
   
   return dateObj.toLocaleString('en-US', {

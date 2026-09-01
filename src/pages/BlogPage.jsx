@@ -7,7 +7,7 @@ import { loadPublicBlogIndex } from '../utils/blogStore';
 // Lazy load heavy components
 const CalendlyModal = lazy(() => import('../components/CalendlyModal'));
 const Footer = lazy(() => import('../components/Footer'));
-import { Search, Filter } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 const BlogPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,11 +31,7 @@ const BlogPage = () => {
   }, []);
 
   const featuredPosts = useMemo(() => {
-    return blogData ? blogData.getFeaturedPosts() : [];
-  }, [blogData]);
-
-  const recentPosts = useMemo(() => {
-    return blogData ? blogData.getRecentPosts(6) : [];
+    return blogData ? blogData.getFeaturedPosts(4) : [];
   }, [blogData]);
 
   const filteredPosts = useMemo(() => {
@@ -237,7 +233,7 @@ const BlogPage = () => {
                   <> in <span className="text-orange-400 font-semibold">{blogData.blogCategories.find(c => c.id === selectedCategory)?.name}</span></>
                 )}
                 {searchTerm && (
-                  <> matching "<span className="text-orange-400 font-semibold">{searchTerm}</span>"</>
+                  <> matching &ldquo;<span className="text-orange-400 font-semibold">{searchTerm}</span>&rdquo;</>
                 )}
               </p>
             </div>

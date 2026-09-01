@@ -1,16 +1,35 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SEOHead from '../components/SEOHead';
 import { companyInfo, getCanonicalUrl } from '../constants/companyInfo';
 import { blogCategories, getFeaturedPosts, getRecentPosts } from '../data/blogData';
+import { loadPublicBlogIndex } from '../utils/blogStore';
 import { FinalCTA, SectionHeading, SectionShell } from '../components/product';
 
 const Footer = lazy(() => import('../components/Footer'));
 
 const InsightsPage = () => {
   const canonical = getCanonicalUrl('/insights');
-  const featured = getFeaturedPosts();
-  const recent = getRecentPosts(6);
+  const [featured, setFeatured] = useState(() => getFeaturedPosts(6));
+  const [recent, setRecent] = useState(() => getRecentPosts(6));
+
+  useEffect(() => {
+    let cancelled = false;
+    loadPublicBlogIndex()
+      .then((data) => {
+        if (cancelled) return;
+        setFeatured(data.getFeaturedPosts(6));
+        setRecent(data.getRecentPosts(6));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setFeatured(getFeaturedPosts(6));
+        setRecent(getRecentPosts(6));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const structuredData = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -66,7 +85,7 @@ const InsightsPage = () => {
             {(featured.length ? featured : recent).map((post) => (
               <article key={post.slug} className="border border-line bg-panel p-6">
                 <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-signal">
-                  {post.readingTime}
+                  {post.readingTime || post.readTime}
                 </p>
                 <h2 className="font-display text-2xl text-bone mt-2">
                   <Link to={`/blogs/${post.slug}`} className="hover:text-ember">

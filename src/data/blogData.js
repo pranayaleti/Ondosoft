@@ -1,7 +1,6 @@
 // Blog data structure and utilities
 import automationHero from '../assets/blog/automation-hero.jpg';
 import saasGrowthHero from '../assets/blog/saas-growth-hero.jpg';
-import hiringDevelopersHero from '../assets/blog/hiring-developers-hero.jpg';
 
 export const blogCategories = [
   {
@@ -44,6 +43,7 @@ export const blogPosts = [
     keywords: 'small business automation, custom software, business process automation, workflow optimization, productivity tools, small business technology',
     readingTime: '8 min read',
     featuredImage: automationHero,
+    socialImage: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1200&h=630&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-01-15',
@@ -172,16 +172,7 @@ Automation isn't about replacing humans with machines. It's about freeing up you
 
 **Every hour you save on manual work is an hour you can spend building your empire.**
 
-Ready to automate your business? Let's talk about your specific needs and create a plan that works for your budget and timeline.`,
-    author: 'Ondosoft Team',
-    publishDate: '2024-01-15',
-    category: 'small-business-tech',
-    tags: ['automation', 'small-business', 'productivity', 'custom-software'],
-    readTime: '8 min read',
-    featured: true,
-    image: automationHero,
-    metaDescription: 'Learn how small businesses can automate operations with custom apps to save 20+ hours per week and serve more customers without hiring more staff.',
-    socialImage: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1200&h=630&fit=crop'
+Ready to automate your business? Let's talk about your specific needs and create a plan that works for your budget and timeline.`
   },
   {
     id: 2,
@@ -192,6 +183,8 @@ Ready to automate your business? Let's talk about your specific needs and create
     keywords: 'SaaS solution, business growth, software as a service, business scaling, SaaS benefits, growth indicators, business technology',
     readingTime: '6 min read',
     featuredImage: saasGrowthHero,
+    socialImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=630&fit=crop',
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=600&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-01-20',
@@ -316,16 +309,7 @@ If you're experiencing any of these 5 signs, it's time to seriously consider a S
 
 **Every day you wait is another day of lost productivity, missed opportunities, and unnecessary stress.**
 
-Ready to explore SaaS solutions for your business? Let's identify your biggest pain points and find the right tools to solve them.`,
-    author: 'Ondosoft Team',
-    publishDate: '2024-01-10',
-    category: 'saas',
-    tags: ['saas', 'growth', 'scaling', 'business-automation'],
-    readTime: '6 min read',
-    featured: true,
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=600&fit=crop',
-    metaDescription: 'Discover the 5 key signs that indicate you need a SaaS solution to scale your business operations and reach more customers.',
-    socialImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=630&fit=crop'
+Ready to explore SaaS solutions for your business? Let's identify your biggest pain points and find the right tools to solve them.`
   },
   {
     id: 3,
@@ -336,6 +320,7 @@ Ready to explore SaaS solutions for your business? Let's identify your biggest p
     keywords: 'freelance developers, cost savings, software development, agencies vs freelancers, development costs, project management',
     readingTime: '7 min read',
     featuredImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&h=630&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-01-25',
@@ -510,16 +495,7 @@ Working with freelance developers isn't just about saving money - it's about get
 
 **The question isn't whether you can afford to work with a freelancer. It's whether you can afford not to.**
 
-Ready to save 40% on your next software project? Let's talk about your specific needs and find the right solution for your budget and timeline.`,
-    author: 'Ondosoft Team',
-    publishDate: '2024-01-05',
-    category: 'web-development',
-    tags: ['freelance', 'cost-savings', 'development', 'business'],
-    readTime: '7 min read',
-    featured: false,
-    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&h=600&fit=crop',
-    metaDescription: 'Learn why smart business owners choose freelance developers over agencies to save 40% on development costs while getting better results.',
-    socialImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&h=630&fit=crop'
+Ready to save 40% on your next software project? Let's talk about your specific needs and find the right solution for your budget and timeline.`
   },
   {
     id: 4,
@@ -530,6 +506,7 @@ Ready to save 40% on your next software project? Let's talk about your specific 
     keywords: 'web application development, modern web apps, web development guide, full-stack development, web technologies',
     readingTime: '12 min read',
     featuredImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=630&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-02-01',
@@ -816,16 +793,7 @@ Building a modern web application is a journey. Start with the basics, iterate b
 
 **Remember**: The best application is the one that solves real problems for real users. Focus on value, not just technology.
 
-Ready to build your modern web application? Let's discuss your specific needs and create a plan that works for your business.`,
-    author: 'Ondosoft Team',
-    publishDate: '2024-02-01',
-    category: 'web-development',
-    tags: ['web-development', 'full-stack', 'modern-apps', 'technology'],
-    readTime: '12 min read',
-    featured: false,
-    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=600&fit=crop',
-    metaDescription: 'Complete guide to building modern web applications with essential technologies, best practices, and strategies.',
-    socialImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=630&fit=crop'
+Ready to build your modern web application? Let's discuss your specific needs and create a plan that works for your business.`
   },
   {
     id: 5,
@@ -836,6 +804,7 @@ Ready to build your modern web application? Let's discuss your specific needs an
     keywords: 'small business tools, business software, productivity tools, business technology, essential tools',
     readingTime: '9 min read',
     featuredImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=630&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-02-05',
@@ -1113,16 +1082,7 @@ The right tools can transform your small business. They level the playing field,
 
 **Don't wait for the "perfect" time. Start with one tool today and build from there.**
 
-Ready to transform your business with the right tools? Let's identify which tools would have the biggest impact on your business.`,
-    author: 'Ondosoft Team',
-    publishDate: '2024-02-05',
-    category: 'small-business-tech',
-    tags: ['small-business', 'tools', 'productivity', 'business-software'],
-    readTime: '9 min read',
-    featured: false,
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop',
-    metaDescription: 'Discover 10 essential tools every small business needs in 2024 to boost productivity and streamline operations.',
-    socialImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=630&fit=crop'
+Ready to transform your business with the right tools? Let's identify which tools would have the biggest impact on your business.`
   },
   {
     id: 6,
@@ -1133,6 +1093,7 @@ Ready to transform your business with the right tools? Let's identify which tool
     keywords: 'SaaS product development, build SaaS, software business, SaaS startup, product development',
     readingTime: '15 min read',
     featuredImage: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=1200&h=630&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-02-10',
@@ -1468,16 +1429,7 @@ Building a SaaS product is a journey. Start with validation, build an MVP, launc
 
 **Remember**: The best SaaS products solve real problems for real people. Focus on value, not just features.
 
-Ready to build your SaaS product? Let's discuss your idea and create a plan that works for your business.`,
-    author: 'Ondosoft Team',
-    publishDate: '2024-02-10',
-    category: 'saas',
-    tags: ['saas', 'product-development', 'startup', 'business'],
-    readTime: '15 min read',
-    featured: false,
-    image: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=1200&h=600&fit=crop',
-    metaDescription: 'Complete guide to building a SaaS product from scratch with essential steps, technologies, and strategies.',
-    socialImage: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=1200&h=630&fit=crop'
+Ready to build your SaaS product? Let's discuss your idea and create a plan that works for your business.`
   },
   {
     id: 7,
@@ -1488,6 +1440,8 @@ Ready to build your SaaS product? Let's discuss your idea and create a plan that
     keywords: 'business process automation, workflow automation, process automation, business automation, automation tools',
     readingTime: '11 min read',
     featuredImage: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1200&h=630&fit=crop',
+    image: automationHero,
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-02-15',
@@ -1801,16 +1755,7 @@ Business process automation is essential for scaling your business. Start with o
 
 **Remember**: Automation isn't about replacing humans. It's about freeing up time to focus on what matters most: growing your business.
 
-Ready to automate your business processes? Let's identify which processes would have the biggest impact on your business.`,
-    author: 'Ondosoft Team',
-    publishDate: '2024-02-15',
-    category: 'automation',
-    tags: ['automation', 'business-processes', 'workflow', 'productivity'],
-    readTime: '11 min read',
-    featured: false,
-    image: automationHero,
-    metaDescription: 'Complete guide to business process automation with practical strategies and tools.',
-    socialImage: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1200&h=630&fit=crop'
+Ready to automate your business processes? Let's identify which processes would have the biggest impact on your business.`
   },
   {
     id: 8,
@@ -1821,6 +1766,7 @@ Ready to automate your business processes? Let's identify which processes would 
     keywords: 'web development best practices, modern web development, web development 2024, web development tips, frontend development',
     readingTime: '10 min read',
     featuredImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=630&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-02-20',
@@ -2170,16 +2116,7 @@ Web development best practices evolve constantly. Stay updated, focus on perform
 
 **Remember**: Best practices are guidelines, not rules. Adapt them to your specific needs and context.
 
-Ready to improve your web development practices? Let's discuss your specific needs and create a plan that works for your project.`,
-    author: 'Ondosoft Team',
-    publishDate: '2024-02-20',
-    category: 'web-development',
-    tags: ['web-development', 'best-practices', 'frontend', 'modern-web'],
-    readTime: '10 min read',
-    featured: false,
-    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=600&fit=crop',
-    metaDescription: 'Learn web development best practices for 2024 with modern techniques and strategies.',
-    socialImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=630&fit=crop'
+Ready to improve your web development practices? Let's discuss your specific needs and create a plan that works for your project.`
   },
   {
     id: 9,
@@ -2190,6 +2127,7 @@ Ready to improve your web development practices? Let's discuss your specific nee
     keywords: 'technology stack, tech stack, choosing technology, web development stack, software stack',
     readingTime: '8 min read',
     featuredImage: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&h=630&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-02-25',
@@ -2451,16 +2389,7 @@ Choosing the right technology stack is about matching technology to your specifi
 
 **Remember**: The best technology stack is the one that helps you build, launch, and scale your product successfully.
 
-Ready to choose your technology stack? Let's discuss your project requirements and find the best fit for your needs.`,
-    author: 'Ondosoft Team',
-    publishDate: '2024-02-25',
-    category: 'web-development',
-    tags: ['web-development', 'technology', 'tech-stack', 'decision-making'],
-    readTime: '8 min read',
-    featured: false,
-    image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&h=600&fit=crop',
-    metaDescription: 'Learn how to choose the right technology stack for your project with practical decision-making strategies.',
-    socialImage: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&h=630&fit=crop'
+Ready to choose your technology stack? Let's discuss your project requirements and find the best fit for your needs.`
   },
   {
     id: 10,
@@ -2471,6 +2400,7 @@ Ready to choose your technology stack? Let's discuss your project requirements a
     keywords: 'digital transformation, small business technology, business modernization, digital strategy, technology adoption',
     readingTime: '13 min read',
     featuredImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=630&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-03-01',
@@ -2748,16 +2678,7 @@ Digital transformation is essential for small businesses to compete in today's m
 
 **Remember**: Digital transformation is a journey, not a destination. Start today, iterate, and improve continuously.
 
-Ready to transform your business? Let's discuss your specific needs and create a digital transformation plan that works for your business.`,
-    author: 'Ondosoft Team',
-    publishDate: '2024-03-01',
-    category: 'small-business-tech',
-    tags: ['small-business', 'digital-transformation', 'technology', 'modernization'],
-    readTime: '13 min read',
-    featured: false,
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop',
-    metaDescription: 'Complete guide to small business digital transformation with strategies and best practices.',
-    socialImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=630&fit=crop'
+Ready to transform your business? Let's discuss your specific needs and create a digital transformation plan that works for your business.`
   },
   {
     id: 11,
@@ -2768,6 +2689,8 @@ Ready to transform your business? Let's discuss your specific needs and create a
     keywords: 'SaaS trends, SaaS future, software as a service trends, SaaS predictions, SaaS industry',
     readingTime: '9 min read',
     featuredImage: saasGrowthHero,
+    socialImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=630&fit=crop',
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=600&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-03-05',
@@ -3101,16 +3024,7 @@ The SaaS industry is evolving rapidly. AI integration, vertical SaaS, and usage-
 
 **Remember**: Stay ahead of trends, focus on customer value, and build products that solve real problems.
 
-Ready to build the future of SaaS? Let's discuss your ideas and create a plan that leverages these trends.`,
-    author: 'Ondosoft Team',
-    publishDate: '2024-03-05',
-    category: 'saas',
-    tags: ['saas', 'trends', 'future', 'technology'],
-    readTime: '9 min read',
-    featured: false,
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=600&fit=crop',
-    metaDescription: 'Explore the future of SaaS with trends and predictions for 2024.',
-    socialImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=630&fit=crop'
+Ready to build the future of SaaS? Let's discuss your ideas and create a plan that leverages these trends.`
   },
   {
     id: 12,
@@ -3121,6 +3035,7 @@ Ready to build the future of SaaS? Let's discuss your ideas and create a plan th
     keywords: 'scalable web applications, web app architecture, scalability, performance optimization, system design',
     readingTime: '14 min read',
     featuredImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=630&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-03-10',
@@ -3459,16 +3374,7 @@ Building scalable web applications requires planning, good architecture, and bes
 
 **Remember**: Scalability is not just about handling more traffic. It's about building applications that can grow with your business.
 
-Ready to build scalable applications? Let's discuss your requirements and create an architecture that scales with your growth.`,
-    author: 'Ondosoft Team',
-    publishDate: '2024-03-10',
-    category: 'web-development',
-    tags: ['web-development', 'scalability', 'architecture', 'performance'],
-    readTime: '14 min read',
-    featured: false,
-    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=600&fit=crop',
-    metaDescription: 'Learn how to build scalable web applications with architecture patterns and best practices.',
-    socialImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=630&fit=crop'
+Ready to build scalable applications? Let's discuss your requirements and create an architecture that scales with your growth.`
   },
   {
     id: 13,
@@ -3479,6 +3385,7 @@ Ready to build scalable applications? Let's discuss your requirements and create
     keywords: 'OndoSoft vs Fiverr, OndoSoft vs Upwork, best Fiverr alternatives 2025, hire freelance web developer, React and full-stack developer for hire, Fiverr alternative, Upwork alternative, hire React developer without Upwork, best web developers like Fiverr and Upwork',
     readingTime: '10 min read',
     featuredImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&h=630&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-03-15',
@@ -3665,16 +3572,7 @@ Launch your project and get ongoing support.
 
 **Don't pay platform fees when you don't have to. Choose OndoSoft and get better quality, better service, and better value.**
 
-Ready to hire a freelance web developer without platform fees? [Schedule your free consultation today](/contact) and discover why OndoSoft is the best Fiverr alternative in 2025.`,
-    author: 'OndoSoft Team',
-    publishDate: '2024-03-15',
-    category: 'web-development',
-    tags: ['fiverr-alternative', 'upwork-alternative', 'freelance-developers', 'web-development'],
-    readTime: '10 min read',
-    featured: true,
-    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&h=600&fit=crop',
-    metaDescription: 'Compare OndoSoft vs Fiverr vs Upwork for hiring freelance web developers. Best Fiverr alternative 2025 with no platform fees.',
-    socialImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&h=630&fit=crop'
+Ready to hire a freelance web developer without platform fees? [Schedule your free consultation today](/contact) and discover why OndoSoft is the best Fiverr alternative in 2025.`
   },
   {
     id: 14,
@@ -3685,6 +3583,7 @@ Ready to hire a freelance web developer without platform fees? [Schedule your fr
     keywords: 'hire freelance web developer, best Fiverr alternatives 2025, Upwork alternative, Freelancer alternative, React and full-stack developer for hire, affordable software development services, hire React developer without Upwork',
     readingTime: '12 min read',
     featuredImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=630&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-03-20',
@@ -3930,16 +3829,7 @@ A $20,000 web development project:
 
 **Don't pay platform fees when you don't have to. Choose OndoSoft and get better quality, better service, and better value.**
 
-Ready to hire a freelance web developer without platform fees? [Schedule your free consultation](/contact) and discover why OndoSoft is the best alternative to Fiverr, Upwork, and Freelancer in 2025.`,
-    author: 'OndoSoft Team',
-    publishDate: '2024-03-20',
-    category: 'web-development',
-    tags: ['hire-developers', 'fiverr-alternative', 'freelance-developers', 'web-development'],
-    readTime: '12 min read',
-    featured: true,
-    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=600&fit=crop',
-    metaDescription: 'Discover the best alternatives to Fiverr, Upwork, and Freelancer for hiring freelance web developers. OndoSoft offers zero platform fees.',
-    socialImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=630&fit=crop'
+Ready to hire a freelance web developer without platform fees? [Schedule your free consultation](/contact) and discover why OndoSoft is the best alternative to Fiverr, Upwork, and Freelancer in 2025.`
   },
   {
     id: 15,
@@ -3950,6 +3840,7 @@ Ready to hire a freelance web developer without platform fees? [Schedule your fr
     keywords: 'React and full-stack developer for hire, hire React developer without Upwork, React developers, full-stack developers, hire freelance web developer, Fiverr alternative, Upwork alternative',
     readingTime: '11 min read',
     featuredImage: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=1200&h=630&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-03-25',
@@ -4229,16 +4120,7 @@ Looking to hire a React or full-stack developer? You've probably considered Five
 
 **Don't pay platform fees for React development. Choose OndoSoft and get better quality, better service, and better value.**
 
-Ready to hire a React or full-stack developer? [Schedule your free consultation](/contact) and discover why OndoSoft is the best choice for React development projects.`,
-    author: 'OndoSoft Team',
-    publishDate: '2024-03-25',
-    category: 'web-development',
-    tags: ['react-developers', 'full-stack-developers', 'hire-developers', 'web-development'],
-    readTime: '11 min read',
-    featured: true,
-    image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=1200&h=600&fit=crop',
-    metaDescription: 'Hire React and full-stack developers through OndoSoft. Zero platform fees, direct access to experts, and guaranteed quality.',
-    socialImage: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=1200&h=630&fit=crop'
+Ready to hire a React or full-stack developer? [Schedule your free consultation](/contact) and discover why OndoSoft is the best choice for React development projects.`
   },
   {
     id: 16,
@@ -4249,6 +4131,8 @@ Ready to hire a React or full-stack developer? [Schedule your free consultation]
     keywords: 'website design and SEO management agency, freelance digital marketing and SEO agency, custom website development in the USA, affordable software development services, Fiverr alternative, Upwork alternative',
     readingTime: '9 min read',
     featuredImage: saasGrowthHero,
+    socialImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=630&fit=crop',
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=600&fit=crop',
     author: 'Pranay Reddy Aleti',
     authorRole: 'Founder & Lead Developer',
     publishDate: '2024-03-30',
@@ -4533,16 +4417,7 @@ Need a website design and SEO management agency? You've probably looked at Fiver
 
 **Don't pay platform fees for website design and SEO. Choose OndoSoft and get better quality, better service, and better value.**
 
-Ready to get started with website design and SEO management? [Schedule your free consultation](/contact) and discover why OndoSoft is the best alternative to Fiverr and Upwork for website design and SEO services.`,
-    author: 'OndoSoft Team',
-    publishDate: '2024-03-30',
-    category: 'web-development',
-    tags: ['website-design', 'seo-management', 'digital-marketing', 'web-development'],
-    readTime: '9 min read',
-    featured: true,
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=600&fit=crop',
-    metaDescription: 'OndoSoft offers affordable website design and SEO management services as an alternative to Fiverr and Upwork.',
-    socialImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=630&fit=crop'
+Ready to get started with website design and SEO management? [Schedule your free consultation](/contact) and discover why OndoSoft is the best alternative to Fiverr and Upwork for website design and SEO services.`
   },
   {
     id: 17,
@@ -5120,8 +4995,11 @@ export const getPostsByCategory = (categorySlug) => {
   return blogPosts.filter(post => post.category === categorySlug);
 };
 
-export const getFeaturedPosts = () => {
-  return blogPosts.filter(post => post.featured);
+export const getFeaturedPosts = (limit) => {
+  const featured = [...blogPosts]
+    .filter(post => post.featured)
+    .sort((a, b) => new Date(b.publishDate) - new Date(a.publishDate));
+  return typeof limit === 'number' ? featured.slice(0, limit) : featured;
 };
 
 export const getRecentPosts = (limit = 3) => {

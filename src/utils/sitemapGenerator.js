@@ -4,6 +4,15 @@ import { getGeoSitemapEntries } from '../data/geoPages';
 
 const today = new Date().toISOString().split('T')[0];
 
+function escapeXml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 export const generateSitemap = () => {
   const baseUrl = companyInfo.urls.website;
 
@@ -58,12 +67,13 @@ export const generateSitemap = () => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml">`;
 
   mainPages.forEach(page => {
+    const loc = `${baseUrl}${page.url === '/' ? '/' : page.url}`;
     sitemap += `
   <url>
-    <loc>${baseUrl}${page.url === '/' ? '/' : page.url}</loc>
-    <lastmod>${page.lastmod}</lastmod>
-    <changefreq>${page.changefreq}</changefreq>
-    <priority>${page.priority}</priority>
+    <loc>${escapeXml(loc)}</loc>
+    <lastmod>${escapeXml(page.lastmod)}</lastmod>
+    <changefreq>${escapeXml(page.changefreq)}</changefreq>
+    <priority>${escapeXml(page.priority)}</priority>
   </url>`;
   });
 
@@ -87,7 +97,7 @@ export const generateBlogSitemap = (posts = blogPosts) => {
 
   sitemap += `
   <url>
-    <loc>${baseUrl}/blogs</loc>
+    <loc>${escapeXml(`${baseUrl}/blogs`)}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -99,8 +109,8 @@ export const generateBlogSitemap = (posts = blogPosts) => {
 
     sitemap += `
   <url>
-    <loc>${baseUrl}/blogs/${post.slug}</loc>
-    <lastmod>${lastmod}</lastmod>
+    <loc>${escapeXml(`${baseUrl}/blogs/${post.slug}`)}</loc>
+    <lastmod>${escapeXml(lastmod)}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>${post.featured ? '0.9' : '0.7'}</priority>`;
 
@@ -111,13 +121,16 @@ export const generateBlogSitemap = (posts = blogPosts) => {
     if (imageUrl) {
       sitemap += `
     <image:image>
-      <image:loc>${imageUrl}</image:loc>
-      <image:title>${post.title}</image:title>
-      <image:caption>${post.excerpt || post.metaDescription || ''}</image:caption>
+      <image:loc>${escapeXml(imageUrl)}</image:loc>
+      <image:title>${escapeXml(post.title)}</image:title>
+      <image:caption>${escapeXml(post.excerpt || post.metaDescription || '')}</image:caption>
     </image:image>`;
     }
 
-    const publishDateObj = new Date(publishDate);
+    const newsDate = String(publishDate).slice(0, 10);
+    const publishDateObj = /^\d{4}-\d{2}-\d{2}$/.test(newsDate)
+      ? new Date(`${newsDate}T12:00:00`)
+      : new Date(publishDate);
     const daysSincePublish = (new Date() - publishDateObj) / (1000 * 60 * 60 * 24);
     if (daysSincePublish <= 2) {
       sitemap += `
@@ -126,8 +139,8 @@ export const generateBlogSitemap = (posts = blogPosts) => {
         <news:name>Ondosoft Blog</news:name>
         <news:language>en</news:language>
       </news:publication>
-      <news:publication_date>${publishDate}T00:00:00+00:00</news:publication_date>
-      <news:title>${post.title}</news:title>
+      <news:publication_date>${escapeXml(`${newsDate}T00:00:00+00:00`)}</news:publication_date>
+        <news:title>${escapeXml(post.title)}</news:title>
     </news:news>`;
     }
 
@@ -183,11 +196,11 @@ export const generateSitemapIndex = () => {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
-    <loc>${baseUrl}/sitemap.xml</loc>
+    <loc>${escapeXml(`${baseUrl}/sitemap.xml`)}</loc>
     <lastmod>${today}</lastmod>
   </sitemap>
   <sitemap>
-    <loc>${baseUrl}/sitemap-blogs.xml</loc>
+    <loc>${escapeXml(`${baseUrl}/sitemap-blogs.xml`)}</loc>
     <lastmod>${today}</lastmod>
   </sitemap>
 </sitemapindex>`;

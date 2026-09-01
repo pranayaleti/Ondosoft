@@ -5,6 +5,11 @@ import {
   getRelatedPosts as staticRelated,
 } from '../data/blogData';
 
+function dateField(value) {
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
+  return value || '';
+}
+
 export function mapCmsPost(row) {
   const tags = Array.isArray(row.tags)
     ? row.tags
@@ -24,8 +29,8 @@ export function mapCmsPost(row) {
     socialImage: row.social_image || row.socialImage || '',
     author: row.author || 'Ondosoft',
     authorRole: row.author_role || row.authorRole || '',
-    publishDate: row.publish_date || row.publishDate,
-    lastUpdated: row.updated_at || row.lastUpdated || row.publish_date || row.publishDate,
+    publishDate: dateField(row.publish_date || row.publishDate),
+    lastUpdated: dateField(row.updated_at || row.lastUpdated || row.publish_date || row.publishDate),
     category: row.category || 'web-development',
     tags,
     featured: Boolean(row.featured),
@@ -33,6 +38,23 @@ export function mapCmsPost(row) {
     published: row.published !== false,
     source: row.source || 'cms',
   };
+}
+
+const CMS_FETCH_MS = 4000;
+
+async function fetchCms(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), CMS_FETCH_MS);
+  try {
+    return await fetch(url, { credentials: 'include', signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function featuredFrom(posts, limit) {
+  const featured = posts.filter((post) => post.featured);
+  return typeof limit === 'number' ? featured.slice(0, limit) : featured;
 }
 
 function mergePosts(cmsPosts) {
@@ -45,7 +67,7 @@ function mergePosts(cmsPosts) {
 export async function loadPublicBlogIndex() {
   let cms = [];
   try {
-    const res = await fetch(`${API_URL}/blogs`, { credentials: 'include' });
+    const res = await fetchCms(`${API_URL}/blogs`);
     if (res.ok) {
       const data = await res.json();
       cms = (data.posts || []).map(mapCmsPost);
@@ -58,7 +80,7 @@ export async function loadPublicBlogIndex() {
   return {
     blogPosts: posts,
     blogCategories,
-    getFeaturedPosts: () => posts.filter((post) => post.featured),
+    getFeaturedPosts: (limit) => featuredFrom(posts, limit),
     getRecentPosts: (limit = 6) => posts.slice(0, limit),
   };
 }
@@ -66,9 +88,7 @@ export async function loadPublicBlogIndex() {
 export async function loadPublicBlogPost(slug) {
   let cmsPost = null;
   try {
-    const res = await fetch(`${API_URL}/blogs/${encodeURIComponent(slug)}`, {
-      credentials: 'include',
-    });
+    const res = await fetchCms(`${API_URL}/blogs/${encodeURIComponent(slug)}`);
     if (res.ok) {
       const data = await res.json();
       if (data.post) cmsPost = mapCmsPost(data.post);
@@ -78,7 +98,10 @@ export async function loadPublicBlogPost(slug) {
   }
 
   const { blogPosts } = await loadPublicBlogIndex();
-  const post = cmsPost || blogPosts.find((item) => item.slug === slug) || null;
+  const fromIndex = blogPosts.find((item) => item.slug === slug) || null;
+  const staticMatch = staticPosts.find((item) => item.slug === slug) || null;
+  const withBody = [cmsPost, fromIndex, staticMatch].find((item) => item?.content);
+  const post = withBody || cmsPost || fromIndex || staticMatch || null;
   const related = post
     ? blogPosts
         .filter((item) => item.slug !== post.slug && (
