@@ -14,6 +14,7 @@ import { dirname, resolve } from 'node:path';
 import { mkdirSync, writeFileSync, existsSync, copyFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { build } from 'esbuild';
+import { fetchPublishedCmsPosts, mergeBlogPosts } from './loadPublishedBlogs.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, '..');
@@ -54,10 +55,21 @@ try {
     logLevel: 'error',
   });
 
-  const { generateSitemap, generateBlogSitemap, generateRobotsTxt } = await import(pathToFileURL(bundlePath).href);
+  const {
+    generateSitemap,
+    generateBlogSitemap,
+    generateRobotsTxt,
+    getStaticBlogPosts,
+  } = await import(pathToFileURL(bundlePath).href);
+
+  const { posts: cmsPosts, source: cmsSource, warning: cmsWarning } = await fetchPublishedCmsPosts();
+  if (cmsWarning && cmsPosts.length === 0) {
+    console.warn(`generate-sitemap: ${cmsWarning}`);
+  }
+  const mergedPosts = mergeBlogPosts(getStaticBlogPosts?.() || [], cmsPosts);
 
   const sitemap = generateSitemap();
-  const blogSitemap = generateBlogSitemap();
+  const blogSitemap = generateBlogSitemap(mergedPosts);
   const robots = generateRobotsTxt();
 
   mkdirSync(publicDir, { recursive: true });
@@ -65,7 +77,8 @@ try {
   writeFileSync(resolve(publicDir, 'sitemap-blogs.xml'), blogSitemap, 'utf8');
   writeFileSync(resolve(publicDir, 'robots.txt'), robots, 'utf8');
 
-  console.log('Wrote sitemap.xml, sitemap-blogs.xml, robots.txt to public/');
+  const cmsNote = cmsPosts.length ? ` (included ${cmsPosts.length} CMS posts via ${cmsSource})` : '';
+  console.log(`Wrote sitemap.xml, sitemap-blogs.xml, robots.txt to public/${cmsNote}`);
 
   if (existsSync(distDir)) {
     copyFileSync(resolve(publicDir, 'sitemap.xml'), resolve(distDir, 'sitemap.xml'));

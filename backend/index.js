@@ -11,6 +11,13 @@ import crypto from 'crypto';
 import webPush from 'web-push';
 import rateLimit from 'express-rate-limit';
 import { isConfigured as aiConfigured, generateReply as generateAIReply, MAX_HISTORY as AI_MAX_HISTORY } from './services/aiService.js';
+import {
+  captchaConfigured,
+  issueCsrfToken,
+  requireCaptchaIfConfigured,
+  requireCsrf,
+  setCsrfCookie,
+} from './csrf.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -445,6 +452,28 @@ const createTables = async () => {
 
       CREATE INDEX IF NOT EXISTS idx_newsletter_subscribers_email ON newsletter_subscribers(email);
       CREATE INDEX IF NOT EXISTS idx_newsletter_subscribers_status ON newsletter_subscribers(status);
+
+      CREATE TABLE IF NOT EXISTS blog_posts (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        slug VARCHAR(160) NOT NULL UNIQUE,
+        excerpt TEXT,
+        meta_description TEXT,
+        keywords TEXT,
+        content TEXT NOT NULL,
+        author VARCHAR(120),
+        category VARCHAR(80),
+        tags TEXT,
+        featured_image TEXT,
+        social_image TEXT,
+        publish_date DATE,
+        published BOOLEAN DEFAULT false,
+        featured BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug);
+      CREATE INDEX IF NOT EXISTS idx_blog_posts_published ON blog_posts(published);
 
       CREATE TABLE IF NOT EXISTS tickets (
         id SERIAL PRIMARY KEY,
@@ -1934,6 +1963,21 @@ const isHoneypotTriggered = (body) => {
   const bait = body?.website ?? body?.company_url ?? '';
   return typeof bait === 'string' && bait.trim().length > 0;
 };
+
+const csrfTokenLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many CSRF token requests. Please try again shortly.' },
+});
+
+app.get('/api/csrf-token', csrfTokenLimiter, (req, res) => {
+  const csrfToken = issueCsrfToken();
+  setCsrfCookie(res, csrfToken);
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ csrfToken, captchaRequired: captchaConfigured() });
+});
 const analyticsLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 120,
@@ -3269,6 +3313,173 @@ const requireAdmin = (req, res, next) => {
   }
   next();
 };
+
+const parseBlogTags = (value) => {
+  if (Array.isArray(value)) return value.map((tag) => String(tag).trim()).filter(Boolean);
+  if (typeof value === 'string') return value.split(',').map((tag) => tag.trim()).filter(Boolean);
+  return [];
+};
+
+const slugifyBlog = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 80);
+
+const mapBlogRow = (row) => ({
+  ...row,
+  tags: parseBlogTags(row.tags),
+  published: Boolean(row.published),
+  featured: Boolean(row.featured),
+});
+
+const readBlogFields = (body) => {
+  const title = typeof body.title === 'string' ? body.title.trim() : '';
+  const slug = slugifyBlog(body.slug || title);
+  const content = typeof body.content === 'string' ? body.content : '';
+  return {
+    title,
+    slug,
+    excerpt: typeof body.excerpt === 'string' ? body.excerpt.trim() : '',
+    meta_description: typeof body.meta_description === 'string' ? body.meta_description.trim() : '',
+    keywords: typeof body.keywords === 'string' ? body.keywords.trim() : '',
+    content,
+    author: typeof body.author === 'string' ? body.author.trim().slice(0, 120) : 'Ondosoft',
+    category: typeof body.category === 'string' ? body.category.trim().slice(0, 80) : 'web-development',
+    tags: parseBlogTags(body.tags).join(','),
+    featured_image: typeof body.featured_image === 'string' ? body.featured_image.trim() : '',
+    social_image: typeof body.social_image === 'string' ? body.social_image.trim() : '',
+    publish_date: body.publish_date || new Date().toISOString().slice(0, 10),
+    published: Boolean(body.published),
+    featured: Boolean(body.featured),
+  };
+};
+
+app.get('/api/blogs', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, title, slug, excerpt, meta_description, keywords, author, category, tags,
+              featured_image, social_image, publish_date, published, featured, created_at, updated_at
+       FROM blog_posts
+       WHERE published = true
+       ORDER BY publish_date DESC NULLS LAST, created_at DESC`
+    );
+    res.json({ posts: result.rows.map(mapBlogRow) });
+  } catch (error) {
+    console.error('Public blogs list error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/blogs/:slug', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM blog_posts WHERE slug = $1 AND published = true`,
+      [req.params.slug]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    res.json({ post: mapBlogRow(result.rows[0]) });
+  } catch (error) {
+    console.error('Public blog post error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/admin/blogs', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM blog_posts ORDER BY updated_at DESC, created_at DESC`
+    );
+    res.json({ posts: result.rows.map(mapBlogRow) });
+  } catch (error) {
+    console.error('Admin blogs list error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/admin/blogs/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM blog_posts WHERE id = $1', [req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Post not found' });
+    res.json({ post: mapBlogRow(result.rows[0]) });
+  } catch (error) {
+    console.error('Admin blog get error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/admin/blogs', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const fields = readBlogFields(req.body);
+    if (!fields.title || !fields.slug || !fields.content) {
+      return res.status(400).json({ error: 'Title, slug, and content are required' });
+    }
+    const result = await pool.query(
+      `INSERT INTO blog_posts
+        (title, slug, excerpt, meta_description, keywords, content, author, category, tags,
+         featured_image, social_image, publish_date, published, featured)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+       RETURNING *`,
+      [
+        fields.title, fields.slug, fields.excerpt, fields.meta_description, fields.keywords,
+        fields.content, fields.author, fields.category, fields.tags, fields.featured_image,
+        fields.social_image, fields.publish_date, fields.published, fields.featured,
+      ]
+    );
+    res.status(201).json({ post: mapBlogRow(result.rows[0]) });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'A post with that slug already exists' });
+    }
+    console.error('Admin blog create error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.put('/api/admin/blogs/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const fields = readBlogFields(req.body);
+    if (!fields.title || !fields.slug || !fields.content) {
+      return res.status(400).json({ error: 'Title, slug, and content are required' });
+    }
+    const result = await pool.query(
+      `UPDATE blog_posts SET
+        title = $1, slug = $2, excerpt = $3, meta_description = $4, keywords = $5,
+        content = $6, author = $7, category = $8, tags = $9, featured_image = $10,
+        social_image = $11, publish_date = $12, published = $13, featured = $14,
+        updated_at = CURRENT_TIMESTAMP
+       WHERE id = $15
+       RETURNING *`,
+      [
+        fields.title, fields.slug, fields.excerpt, fields.meta_description, fields.keywords,
+        fields.content, fields.author, fields.category, fields.tags, fields.featured_image,
+        fields.social_image, fields.publish_date, fields.published, fields.featured, req.params.id,
+      ]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Post not found' });
+    res.json({ post: mapBlogRow(result.rows[0]) });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'A post with that slug already exists' });
+    }
+    console.error('Admin blog update error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.delete('/api/admin/blogs/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query('DELETE FROM blog_posts WHERE id = $1 RETURNING id', [req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Post not found' });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Admin blog delete error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // Get admin dashboard
 app.get('/api/admin/dashboard', authenticateToken, requireAdmin, async (req, res) => {
@@ -4752,7 +4963,7 @@ app.post('/api/analytics/track-batch', analyticsLimiter, async (req, res) => {
 });
 
 // Submit consultation form (public endpoint)
-app.post('/api/consultation/submit', publicWriteLimiter, async (req, res) => {
+app.post('/api/consultation/submit', publicWriteLimiter, requireCsrf, requireCaptchaIfConfigured, async (req, res) => {
   try {
     if (isHoneypotTriggered(req.body)) {
       return res.json({ success: true });
@@ -4855,7 +5066,7 @@ app.post('/api/consultation/submit', publicWriteLimiter, async (req, res) => {
 
 // Newsletter subscription (public endpoint)
 const NEWSLETTER_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-app.post('/api/newsletter/subscribe', publicWriteLimiter, async (req, res) => {
+app.post('/api/newsletter/subscribe', publicWriteLimiter, requireCsrf, requireCaptchaIfConfigured, async (req, res) => {
   try {
     if (isHoneypotTriggered(req.body)) {
       return res.json({
@@ -5203,7 +5414,7 @@ app.get('/api/pricing/interactions/:sessionId', async (req, res) => {
 });
 
 // Submit site feedback / ideas (public endpoint)
-app.post('/api/feedback/ideas', publicWriteLimiter, async (req, res) => {
+app.post('/api/feedback/ideas', publicWriteLimiter, requireCsrf, requireCaptchaIfConfigured, async (req, res) => {
   try {
     if (isHoneypotTriggered(req.body)) {
       return res.status(201).json({ success: true });
@@ -5272,7 +5483,7 @@ app.post('/api/feedback/ideas', publicWriteLimiter, async (req, res) => {
 });
 
 // Submit feedback (public endpoint)
-app.post('/api/feedback', publicWriteLimiter, async (req, res) => {
+app.post('/api/feedback', publicWriteLimiter, requireCsrf, requireCaptchaIfConfigured, async (req, res) => {
   try {
     const { type, rating, description, page_url, user_agent } = req.body;
 

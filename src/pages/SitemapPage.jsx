@@ -1,9 +1,10 @@
 import { lazy, Suspense } from 'react';
-import SEOHead from '../components/SEOHead';
-const Footer = lazy(() => import('../components/Footer'));
 import { Link } from 'react-router-dom';
-import { SERVICE_AREAS } from '../utils/unifiedData.js';
+import SEOHead from '../components/SEOHead';
 import { companyInfo, getCanonicalUrl } from '../constants/companyInfo';
+import { getFeaturedCities, getFeaturedStates, getGeoPath, getPlaceLabel } from '../data/geoPages';
+
+const Footer = lazy(() => import('../components/Footer'));
 
 const SitemapPage = () => {
   const canonical = getCanonicalUrl('/sitemap');
@@ -82,6 +83,10 @@ const SitemapPage = () => {
                     <Link to="/solutions" className="block p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700">
                       <h3 className="text-lg font-semibold text-white mb-1">Solutions</h3>
                       <p className="text-sm text-gray-400">Product engineering lanes</p>
+                    </Link>
+                    <Link to="/products" className="block p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700">
+                      <h3 className="text-lg font-semibold text-white mb-1">Products</h3>
+                      <p className="text-sm text-gray-400">Catalog of existing offerings</p>
                     </Link>
                     <Link to="/industries" className="block p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700">
                       <h3 className="text-lg font-semibold text-white mb-1">Industries</h3>
@@ -170,28 +175,30 @@ const SitemapPage = () => {
                 </div>
 
                 {/* Service Areas */}
-                <div>
+                <div id="service-areas" className="scroll-mt-24">
                   <h2 className="text-3xl font-bold text-white mb-6">Service Areas by State</h2>
                   <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
                     <p className="text-gray-300 mb-4">
-                      Ondosoft provides software development services across all 50 states. Browse our offerings on the services page.
+                      Featured state pages for markets we already name — plus our Lehi, Utah studio. We work with teams nationwide from that office.
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {SERVICE_AREAS.states.slice(0, 20).map((state) => (
+                      {getFeaturedStates().map((state) => (
                         <Link
                           key={state.slug}
-                          to="/services"
+                          to={getGeoPath(state)}
                           className="text-orange-500 hover:text-orange-400 hover:underline text-sm"
                         >
-                          {state.name}
+                          {state.name}{state.isHq ? ' (HQ)' : ''}
                         </Link>
                       ))}
-                      {SERVICE_AREAS.states.length > 20 && (
-                        <div className="text-gray-400 text-sm col-span-full">
-                          And {SERVICE_AREAS.states.length - 20} more states...
-                        </div>
-                      )}
                     </div>
+                    <p className="text-gray-400 text-sm mt-4">
+                      Looking for another state? Start on the{' '}
+                      <Link to="/services" className="text-orange-500 hover:text-orange-400 hover:underline">
+                        services
+                      </Link>{' '}
+                      page — coverage is national, pages exist only where we have unique copy.
+                    </p>
                   </div>
                 </div>
 
@@ -200,23 +207,18 @@ const SitemapPage = () => {
                   <h2 className="text-3xl font-bold text-white mb-6">Top Cities</h2>
                   <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
                     <p className="text-gray-300 mb-4">
-                      We serve major metropolitan areas across the United States. See how we work with teams nationwide.
+                      City pages for Lehi (HQ) and the major metros already listed in our service-area data.
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {SERVICE_AREAS.topCities.slice(0, 24).map((city) => (
+                      {getFeaturedCities().map((city) => (
                         <Link
                           key={city.slug}
-                          to="/services"
+                          to={getGeoPath(city)}
                           className="text-orange-500 hover:text-orange-400 hover:underline text-sm"
                         >
-                          {city.displayName}
+                          {getPlaceLabel(city)}
                         </Link>
                       ))}
-                      {SERVICE_AREAS.topCities.length > 24 && (
-                        <div className="text-gray-400 text-sm col-span-full">
-                          And {SERVICE_AREAS.topCities.length - 24} more cities...
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>

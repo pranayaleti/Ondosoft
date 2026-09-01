@@ -1,5 +1,6 @@
 // Unified Data Utility - Single source of truth for all geographic and service data
 // Consolidates citiesData.js, citiesList.js, and serviceAreas.json
+import { getGeoPath, getGeoPageBySlug } from '../data/geoPages';
 
 // All 50 US States with abbreviations and slugs
 export const US_STATES = {
@@ -484,21 +485,26 @@ export const SERVICE_AREAS = {
   // Get city by slug
   getCityBySlug: (slug) => TOP_CITIES.find(city => city.slug === slug),
   
-  // Get all service area URLs for sitemap
-  getServiceAreaUrls: () => [
-    ...STATES.map(state => ({
-      url: `/services`,
-      priority: '0.6',
-      changefreq: 'monthly',
-      lastmod: new Date().toISOString().split('T')[0]
-    })),
-    ...TOP_CITIES.map(city => ({
-      url: `/services`,
-      priority: '0.7',
-      changefreq: 'monthly',
-      lastmod: new Date().toISOString().split('T')[0]
-    }))
-  ],
+  // Get all service area URLs for sitemap (featured geo pages only)
+  getServiceAreaUrls: () => {
+    const lastmod = new Date().toISOString().split('T')[0];
+    const featuredStates = STATES.filter((state) => getGeoPageBySlug(state.slug));
+    const featuredCities = TOP_CITIES.filter((city) => getGeoPageBySlug(city.slug));
+    return [
+      ...featuredStates.map((state) => ({
+        url: getGeoPath(state),
+        priority: '0.6',
+        changefreq: 'monthly',
+        lastmod,
+      })),
+      ...featuredCities.map((city) => ({
+        url: getGeoPath(city),
+        priority: '0.7',
+        changefreq: 'monthly',
+        lastmod,
+      })),
+    ];
+  },
   
   // Generate schema markup for service areas
   getServiceAreaSchema: () => [
@@ -530,18 +536,18 @@ export const SERVICE_AREAS = {
   
   // Generate hidden SEO content for pages
   getHiddenSEOContent: () => ({
-    states: STATES.map(state => ({
+    states: STATES.filter((state) => getGeoPageBySlug(state.slug)).map((state) => ({
       name: state.name,
       slug: state.slug,
       linkText: `Software development services in ${state.name} - Custom projects, full stack development, and SaaS solutions`,
-      url: `/services`
+      url: getGeoPath(state),
     })),
-    cities: TOP_CITIES.map(city => ({
+    cities: TOP_CITIES.filter((city) => getGeoPageBySlug(city.slug)).map((city) => ({
       name: city.displayName,
       slug: city.slug,
       linkText: `Custom software projects and full stack development in ${city.displayName} - Web, mobile, and SaaS solutions`,
-      url: `/services`
-    }))
+      url: getGeoPath(city),
+    })),
   }),
   
   // Get service area count for analytics

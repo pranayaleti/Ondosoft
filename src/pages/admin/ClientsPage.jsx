@@ -8,6 +8,7 @@ import {
   Globe, MapPin, Clock, Tag, Edit, Save, X, CheckCircle, AlertCircle, Plus 
 } from 'lucide-react';
 import SEOHead from '../../components/SEOHead';
+import { ErrorState, LoadingState } from '../../components/admin/SurfaceStates';
 import { formatDateTimeMST } from '../../utils/dateFormat.js';
 
 const ClientsPage = () => {
@@ -225,9 +226,16 @@ const ClientsPage = () => {
     return (
       <>
         <SEOHead title="Clients - Admin" />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader className="w-12 h-12 animate-spin text-orange-500" />
-        </div>
+        <LoadingState label="Loading clients…" />
+      </>
+    );
+  }
+
+  if (error && users.length === 0) {
+    return (
+      <>
+        <SEOHead title="Clients - Admin" />
+        <ErrorState title="Could not load clients" message={error} onRetry={() => fetchUsers()} />
       </>
     );
   }

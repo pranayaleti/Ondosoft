@@ -41,7 +41,9 @@ const BaseLayout = ({ title, navItems }) => {
       </Helmet>
       <div className="flex">
         {/* Sidebar */}
-        <aside className={`fixed h-screen left-0 z-40 w-64 bg-gray-900/95 backdrop-blur-sm border-r border-gray-800 transform transition-transform duration-300 ease-in-out overflow-hidden ${
+        <aside
+          id="dashboard-sidebar"
+          className={`fixed h-screen left-0 z-40 w-64 bg-gray-900/95 backdrop-blur-sm border-r border-gray-800 transform transition-transform duration-300 ease-in-out overflow-hidden ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}>
           <div className="flex flex-col h-full p-6 overflow-hidden">
@@ -52,6 +54,7 @@ const BaseLayout = ({ title, navItems }) => {
               </div>
               {/* Close button for mobile */}
               <button
+                type="button"
                 onClick={() => setMobileMenuOpen(false)}
                 className="lg:hidden p-2 -mt-1 -mr-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors touch-manipulation ml-auto"
                 aria-label="Close menu"
@@ -60,7 +63,7 @@ const BaseLayout = ({ title, navItems }) => {
               </button>
             </div>
 
-            <nav className="flex-1 space-y-1.5 overflow-y-auto min-h-0 pr-2 -mr-2">
+            <nav aria-label={title} className="flex-1 space-y-1.5 overflow-y-auto min-h-0 pr-2 -mr-2">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -102,20 +105,22 @@ const BaseLayout = ({ title, navItems }) => {
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 lg:ml-64 min-h-screen">
-          {/* Hamburger menu button for mobile - only show when sidebar is closed */}
+        <main id="dashboard-main" className="flex-1 lg:ml-64 min-h-screen overflow-x-hidden">
           {!mobileMenuOpen && (
             <div className="lg:hidden fixed top-4 left-4 z-50">
               <button
+                type="button"
                 onClick={() => setMobileMenuOpen(true)}
                 className="p-3 bg-gray-800/90 backdrop-blur-sm rounded-lg text-white hover:bg-gray-700 border border-gray-700 shadow-lg transition-all touch-manipulation"
                 aria-label="Open menu"
+                aria-expanded={mobileMenuOpen}
+                aria-controls="dashboard-sidebar"
               >
                 <Menu className="w-6 h-6" />
               </button>
             </div>
           )}
-          <div className="p-6 lg:p-8 pt-20 lg:pt-8">
+          <div className="p-6 lg:p-8 pt-20 lg:pt-8 max-w-full">
             <Outlet />
           </div>
         </main>
@@ -123,8 +128,10 @@ const BaseLayout = ({ title, navItems }) => {
 
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
-        <div
+        <button
+          type="button"
           className="lg:hidden fixed inset-0 bg-black/50 z-30"
+          aria-label="Close menu overlay"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}

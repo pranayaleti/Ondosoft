@@ -1248,6 +1248,71 @@ export const adminAPI = {
     return response.json();
   },
 
+  async getBlogPosts(options = {}) {
+    const response = await authenticatedFetch(`${API_URL}/admin/blogs`, {
+      method: 'GET',
+      cache: 'no-store',
+      ...options,
+    });
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        window.location.href = '/auth/signin';
+        throw new Error('Authentication required. Please sign in again.');
+      }
+      throw new Error('Failed to fetch blog posts');
+    }
+    return response.json();
+  },
+
+  async getBlogPost(id) {
+    const response = await authenticatedFetch(`${API_URL}/admin/blogs/${id}`, {
+      method: 'GET',
+      cache: 'no-store',
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to load post');
+    }
+    return response.json();
+  },
+
+  async createBlogPost(postData) {
+    const response = await authenticatedFetch(`${API_URL}/admin/blogs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(postData),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to create post');
+    }
+    return response.json();
+  },
+
+  async updateBlogPost(id, postData) {
+    const response = await authenticatedFetch(`${API_URL}/admin/blogs/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(postData),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to update post');
+    }
+    return response.json();
+  },
+
+  async deleteBlogPost(id) {
+    const response = await authenticatedFetch(`${API_URL}/admin/blogs/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to delete post');
+    }
+    return response.json();
+  },
+
 };
 
 // Ticket API functions

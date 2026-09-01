@@ -9,6 +9,9 @@ import {
   rateLimiter,
 } from "../utils/security.js";
 import { companyInfo } from "../constants/companyInfo";
+import CaptchaField from "../components/CaptchaField";
+import { postPublicForm } from "../utils/csrfClient.js";
+import { requireCaptchaToken } from "../utils/captchaClient.js";
 import { CheckCircle, AlertCircle, Send } from "lucide-react";
 
 const Footer = lazy(() => import("../components/Footer"));
@@ -98,19 +101,15 @@ const FeedbackPage = () => {
     setErrorMessage("");
 
     try {
-      const res = await fetch(`${getAPIUrl()}/feedback/ideas`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: sanitizeInput(formData.name),
-          email: sanitizeInput(formData.email),
-          category: formData.category,
-          message: sanitizeInput(formData.message),
-          page_url: typeof window !== "undefined" ? window.location.href : null,
-          website: formData.website,
-        }),
-        credentials: "include",
-      });
+      const captchaToken = await requireCaptchaToken('feedback');
+      const res = await postPublicForm(`${getAPIUrl()}/feedback/ideas`, {
+        name: sanitizeInput(formData.name),
+        email: sanitizeInput(formData.email),
+        category: formData.category,
+        message: sanitizeInput(formData.message),
+        page_url: typeof window !== "undefined" ? window.location.href : null,
+        website: formData.website,
+      }, { captchaToken });
 
       const data = await res.json().catch(() => ({}));
 
@@ -193,6 +192,9 @@ const FeedbackPage = () => {
                 value={formData.website}
                 onChange={handleChange}
               />
+              <div className="mb-4">
+                <CaptchaField />
+              </div>
               {submitStatus === "error" && (
                 <div
                   className="mb-6 p-4 rounded-lg bg-red-900/20 border border-red-500/40 flex items-start gap-3"

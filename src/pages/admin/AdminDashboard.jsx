@@ -7,7 +7,6 @@ import {
   Megaphone, 
   CreditCard, 
   TrendingUp, 
-  Loader,
   DollarSign,
   FileText,
   FolderOpen,
@@ -23,35 +22,39 @@ import {
   MessageCircle
 } from 'lucide-react';
 import SEOHead from '../../components/SEOHead';
+import { ErrorState, LoadingState } from '../../components/admin/SurfaceStates';
 import { formatDateMST, formatDateTimeMST } from '../../utils/dateFormat.js';
 
 const AdminDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const fetchInitiatedRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
     const controller = new AbortController();
-    if (!fetchInitiatedRef.current) {
-      fetchInitiatedRef.current = true;
-      fetchDashboardData(controller.signal);
-    }
-    return () => controller.abort();
+    fetchDashboardData(controller.signal);
+    return () => {
+      isMountedRef.current = false;
+      controller.abort();
+    };
   }, []);
 
   const fetchDashboardData = async (signal) => {
     try {
-      setLoading(true);
-      setError(null);
+      if (isMountedRef.current) {
+        setLoading(true);
+        setError(null);
+      }
       const data = await adminAPI.getDashboard({ signal });
+      if (!isMountedRef.current) return;
       setDashboardData(data);
     } catch (err) {
-      if (isAbortError(err)) return;
+      if (!isMountedRef.current || isAbortError(err)) return;
       setError(err.message);
-      fetchInitiatedRef.current = false;
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
     }
   };
 
@@ -59,9 +62,7 @@ const AdminDashboard = () => {
     return (
       <>
         <SEOHead title="Admin Dashboard" />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader className="w-12 h-12 animate-spin text-orange-500" />
-        </div>
+        <LoadingState label="Loading dashboard…" />
       </>
     );
   }
@@ -70,9 +71,16 @@ const AdminDashboard = () => {
     return (
       <>
         <SEOHead title="Admin Dashboard" />
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400">
-          Error: {error}
-        </div>
+        <ErrorState title="Error loading dashboard" message={error} onRetry={() => fetchDashboardData()} />
+      </>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <>
+        <SEOHead title="Admin Dashboard" />
+        <ErrorState title="No dashboard data" message="The admin API returned an empty payload." onRetry={() => fetchDashboardData()} />
       </>
     );
   }

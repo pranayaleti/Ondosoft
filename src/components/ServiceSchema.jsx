@@ -1,9 +1,16 @@
+import { useLocation } from 'react-router-dom';
 import { companyInfo } from '../constants/companyInfo';
+import { shouldEmitPageJsonLd } from '../utils/staticJsonLd';
 
 // Service-specific schema markup for individual service pages.
 // Provider references the global Organization graph (@id) instead of
 // re-emitting a full Organization, so we do not duplicate the entity.
 const ServiceSchema = ({ serviceName, serviceDescription, serviceType, pageUrl }) => {
+  const { pathname } = useLocation();
+  if (!shouldEmitPageJsonLd(pathname)) {
+    return null;
+  }
+
   const serviceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -36,13 +43,13 @@ const ServiceSchema = ({ serviceName, serviceDescription, serviceType, pageUrl }
 };
 
 // LocalBusiness schema for city-specific pages
-const CityServiceSchema = ({ city, state, serviceName, serviceDescription }) => {
+const CityServiceSchema = ({ city, state, serviceName, serviceDescription, pageUrl }) => {
   const cityServiceSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "name": `${companyInfo.name} - ${serviceName} in ${city}, ${state}`,
     "description": `${serviceDescription} services in ${city}, ${state}. Professional software development, custom projects, and SaaS solutions.`,
-    "url": `${companyInfo.urls.website}/services`,
+    "url": pageUrl || `${companyInfo.urls.website}/services/${city.toLowerCase().replace(/\s+/g, '-')}-${state.toLowerCase()}`,
     "telephone": companyInfo.phoneE164,
     "email": companyInfo.email,
     "address": {

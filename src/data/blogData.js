@@ -4543,6 +4543,571 @@ Ready to get started with website design and SEO management? [Schedule your free
     image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=600&fit=crop',
     metaDescription: 'OndoSoft offers affordable website design and SEO management services as an alternative to Fiverr and Upwork.',
     socialImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=630&fit=crop'
+  },
+  {
+    id: 17,
+    title: 'What a First Product Engineering Engagement Should Look Like',
+    slug: 'what-first-product-engineering-engagement-should-look-like',
+    excerpt: 'A first build should produce a shippable slice, a shared roadmap, and a team you can judge after a few weeks — not a 40-page spec and a six-month black box.',
+    metaDescription: 'How to structure a first product engineering engagement: discovery, a thin vertical slice, weekly demos, and a roadmap you can change. Written for founders and product leads hiring a US-based team.',
+    keywords: 'product engineering engagement, custom web application development, SaaS MVP, software discovery, weekly demos, hire product engineers',
+    readingTime: '8 min read',
+    featuredImage: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&h=630&fit=crop',
+    author: 'Pranay Reddy Aleti',
+    authorRole: 'Founder & Lead Developer',
+    publishDate: '2026-06-12',
+    lastUpdated: '2026-06-12',
+    category: 'saas',
+    tags: ['product-engineering', 'saas', 'discovery', 'roadmap', 'mvp'],
+    featured: true,
+    content: `# What a First Product Engineering Engagement Should Look Like
+
+**If the first month cannot produce working software and a decision, the engagement is structured wrong.**
+
+Most first projects fail for a boring reason: the buyer and the builders never agree on what "done" means in week four. One side expects a finished product. The other is still mapping requirements. Both are disappointed, and nobody can point at a screen and say this is the system.
+
+A first [product engineering](/solutions/product-engineering) engagement should be smaller than a full product and stricter than a workshop. It should leave you with three artifacts: a thin slice users can touch, a written roadmap for the next two releases, and a working relationship you can keep or stop.
+
+## What the first four weeks are for
+
+They are not for a complete architecture document. They are for reducing the two risks that actually kill products: building the wrong thing, and building the right thing on a stack nobody can operate.
+
+### Week 1: decisions, not decks
+
+Start with the job the software has to do. Who uses it, what they do today, and which step is expensive, error-prone, or impossible to hire around. Write those as user-visible outcomes, not as a feature inventory.
+
+In the same week, lock the constraints that later become excuses:
+
+- Who can approve a change in under 24 hours
+- What must be live versus what can stay manual
+- Which systems are in-bounds (billing, identity, existing databases)
+- What "production" means for this slice (auth, backups, a deploy path)
+
+If those four answers do not exist, you do not have a project yet. You have a conversation.
+
+### Weeks 2-4: one vertical slice
+
+A vertical slice is one path that goes from the UI through the API to stored data and back. Not five screens of mockups. Not an API with no client. One path a real user could complete.
+
+Good first slices look like:
+
+- Sign in, create one core record, see it again after refresh
+- A customer can submit a request and an operator can close it
+- A subscription can start, fail a card, and recover without a spreadsheet
+
+Bad first slices look like "the whole admin," "all integrations," or "mobile plus web plus analytics." Those are later releases.
+
+## How you should measure the team
+
+Do not wait until a final demo. After two weekly reviews you should already know:
+
+- Whether they explain tradeoffs in product language, not only in framework names
+- Whether work lands in a shared environment you can click, not a zip file
+- Whether scope changes get written down, with something cut when something is added
+
+Weekly demos are not theater. They are the operating cadence we already use on [product engineering](/solutions/product-engineering) work: you see the slice, you decide what moves next, and the backlog stays honest.
+
+## What you should refuse to buy
+
+A first engagement is the wrong place for:
+
+- A six-month fixed bid against an incomplete spec
+- A bench of unnamed engineers you cannot message
+- A "phase 0" that only produces slides
+- A rewrite of every adjacent system "while we are in there"
+
+Those patterns hide risk until the budget is gone. If a partner cannot ship a slice you can use, they cannot ship the rest either.
+
+## How this connects to later work
+
+Once the slice is real, the next decision is usually obvious: keep going as a product team, add [dedicated engineers](/solutions/dedicated-teams) for capacity, or pause. You are choosing based on software that exists, not based on a pitch.
+
+If you are scoping a first build, [tell us the outcome you need in week four](/contact). We will say whether that outcome fits a short engagement or whether you still need a narrower slice.`
+  },
+  {
+    id: 18,
+    title: 'Dedicated Engineering Teams: What You Get Week to Week',
+    slug: 'dedicated-engineering-teams-week-to-week',
+    excerpt: 'A dedicated team is not a staff-aug resume pack. It is named engineers, a shared roadmap, and a demo every week you can plan the rest of the company around.',
+    metaDescription: 'What a dedicated engineering team actually does each week: named engineers, a shared backlog, weekly demos, and billing you can plan around. Compare it to hiring in-house or buying marketplace hours.',
+    keywords: 'dedicated engineering team, dedicated developers, staff augmentation alternative, weekly demos, hire full-stack team, software delivery cadence',
+    readingTime: '8 min read',
+    featuredImage: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1200&h=630&fit=crop',
+    author: 'Pranay Reddy Aleti',
+    authorRole: 'Founder & Lead Developer',
+    publishDate: '2026-06-26',
+    lastUpdated: '2026-06-26',
+    category: 'web-development',
+    tags: ['dedicated-teams', 'delivery', 'staffing', 'product-team', 'web-development'],
+    featured: false,
+    content: `# Dedicated Engineering Teams: What You Get Week to Week
+
+**If you cannot name the people writing the code, you do not have a team. You have a ticket queue.**
+
+Companies reach for extra engineering capacity in three common ways: hire in-house, buy hours on a marketplace, or embed a dedicated team. The last option only works if it behaves like part of your company, not like a black box that emits pull requests.
+
+This is what a [dedicated engineering team](/solutions/dedicated-teams) should look like in practice — the cadence, the artifacts, and the failure modes.
+
+## The weekly loop
+
+A working dedicated team runs the same loop every week. Skip a step and the engagement turns into status theater.
+
+### Monday: the board is the contract
+
+There is one backlog both sides can see. Each item has an owner, a definition of done, and a reason it is in this week instead of next. If an item cannot be demoed, it is too big and gets split.
+
+You should be able to answer, without a meeting:
+
+- What will be clickable by Friday
+- What is blocked on you (copy, access, a decision)
+- What was explicitly cut so something else could land
+
+### Midweek: the work is in a shared environment
+
+Code that only lives on a laptop is not delivery. Staging (or a preview URL) should update as work merges. Product, support, and whoever signs invoices should be able to click the same build.
+
+### Friday: a demo with decisions, not highlights
+
+A demo is 20-30 minutes. Show the paths that changed. Say what broke. Decide what moves. Write the decision in the same place as the backlog.
+
+If the demo is a slide deck, the week did not happen.
+
+## What "dedicated" has to include
+
+The word is abused. At minimum you should get:
+
+- Named engineers you can message directly
+- A technical lead who can say no to a bad shortcut
+- Coverage for the stack you actually run (UI, API, data, deploy)
+- A support path after launch, not a hard stop on the last invoice
+
+Fixed-price and agile billing can both work. What cannot work is a rate card with no owner and no demo.
+
+## Dedicated team vs hiring vs marketplace hours
+
+Hiring in-house is right when the work is the core of the company for years and you can recruit, onboard, and manage engineers well. It is slow, and the cost is not the salary — it is the months before the first person is productive.
+
+Marketplace hours are right for a tightly specified, disposable task. They are a poor fit for a product with changing requirements, because you re-explain context every sprint and you own the integration risk.
+
+A dedicated team is right when you need shipping capacity now, you already know the product problem, and you want continuity without standing up a full internal department this quarter.
+
+## How to know it is working by week three
+
+You do not need a quarter to evaluate this.
+
+- The same people are still on the account
+- Production or staging moved every week
+- You were asked to cut scope at least once (that is a sign of honesty)
+- Bugs from week one did not reappear as "new work" in week three
+
+If those are missing, stop. Extending a weak engagement does not make it a team.
+
+## How we run this
+
+Ondosoft's dedicated teams are senior full-stack engineers with weekly demos and direct access — the model described on our [dedicated teams](/solutions/dedicated-teams) page, not a bench of anonymous resumes.
+
+If you need capacity you can plan around, [start with the outcome for the next four weeks](/contact). We will tell you whether a dedicated team is the right shape, or whether a smaller product engineering slice is safer first.`
+  },
+  {
+    id: 19,
+    title: 'When Patching Legacy Software Costs More Than Replacing It',
+    slug: 'when-patching-legacy-software-costs-more-than-replacing-it',
+    excerpt: 'Legacy systems do not fail all at once. They fail when every change needs a hero, hiring stalls, and the next feature is priced like a rewrite anyway.',
+    metaDescription: 'A practical test for when to modernize a legacy application instead of patching it: change cost, hiring risk, data risk, and cutover. How to re-platform without a greenfield fantasy.',
+    keywords: 'legacy modernization, replace legacy software, application re-architecture, data migration, React rewrite, cloud cutover',
+    readingTime: '9 min read',
+    featuredImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&h=630&fit=crop',
+    author: 'Pranay Reddy Aleti',
+    authorRole: 'Founder & Lead Developer',
+    publishDate: '2026-07-10',
+    lastUpdated: '2026-07-10',
+    category: 'web-development',
+    tags: ['legacy-modernization', 'architecture', 'migration', 'react', 'cloud'],
+    featured: true,
+    content: `# When Patching Legacy Software Costs More Than Replacing It
+
+**A legacy system is not old. It is expensive to change and risky to leave running.**
+
+Teams stay on aging software because a rewrite sounds like a career-ending bet. Sometimes they are right. A greenfield rebuild that ignores the data, the edge cases, and the operators will be worse than the original.
+
+The other failure is quieter: you keep patching until every small feature requires the last person who understands the codebase, and you still cannot hire anyone who wants to work in it.
+
+[Legacy modernization](/solutions/legacy-modernization) is the path between those two mistakes. You replace risk on a schedule, not in a single cutover weekend.
+
+## Four tests that say "stop patching"
+
+You do not need a 50-page assessment. If two or more of these are true, patching is already the more expensive option.
+
+### Change cost
+
+A one-line business rule takes a week because the UI, the stored procedure, and a batch job all encode it differently. Estimates for "small" tickets keep slipping, and nobody is lying — the system really is that coupled.
+
+### Hiring and bus factor
+
+The people who can safely change production are few, tired, and not training a successor. Job posts for the old stack get no good applicants. New engineers spend months learning folklore instead of shipping.
+
+### Data and compliance risk
+
+Backups are untested. Access is shared. Audit trails are a CSV export. A new customer or a new regulation would require work you cannot schedule because the system has no seams.
+
+### Opportunity cost
+
+The next product you want — a customer portal, a mobile app, an integration — is priced like a rewrite anyway, because there is no API worth calling. You are paying rewrite prices one ticket at a time.
+
+## What replacement should not mean
+
+It should not mean "pause the business for nine months and hope the new system is done." That is how replacements fail.
+
+A modernization that can actually ship looks like this:
+
+- Extract or wrap the data that must survive
+- Put a maintainable API in front of the parts you will keep temporarily
+- Rebuild the highest-churn UI in a current stack (for us that is usually React)
+- Migrate in slices operators can run in parallel
+- Cut over when the new path is boring, not when it is merely demoable
+
+The old system can stay as a source of record longer than people like. That is often the adult move.
+
+## A cutover you can schedule
+
+The cutover is a product decision, not a surprise.
+
+You need a written sequence: which users move first, how you roll back, who watches the logs, and what "done" means for the first week in production. If the plan is "we will know when we get there," you are not ready.
+
+Observability is part of the replacement. A new UI on the same opaque database is not a modernization. It is a coat of paint.
+
+## How we approach this
+
+Ondosoft modernizes by re-architecting, rebuilding the UI, extracting APIs, migrating data, and cutting over on cloud infrastructure you can operate — the work described on [Legacy Modernization](/solutions/legacy-modernization). We do not sell a fantasy in which the old system vanishes on day one.
+
+If you are trying to decide whether this year is a patch year or a replacement year, [bring the four tests and the next feature you cannot ship](/contact). We will tell you which parts are safe to keep and which parts are already costing more than a planned rewrite.`
+  },
+  {
+    id: 20,
+    title: 'Cloud and DevOps When Your SaaS Outgrows One Server',
+    slug: 'cloud-devops-when-saas-outgrows-one-server',
+    excerpt: 'The first production deploy is not a DevOps practice. A practice is CI, infrastructure as code, backups you have restored, and a path to scale without heroics.',
+    metaDescription: 'What to add when a SaaS product outgrows a single server: CI/CD, Docker, infrastructure as code, observability, and a cloud architecture you can operate. Practical DevOps for growing products.',
+    keywords: 'SaaS DevOps, AWS architecture, CI/CD, infrastructure as code, Terraform, Docker, Kubernetes, production operations',
+    readingTime: '8 min read',
+    featuredImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&h=630&fit=crop',
+    author: 'Pranay Reddy Aleti',
+    authorRole: 'Founder & Lead Developer',
+    publishDate: '2026-07-24',
+    lastUpdated: '2026-07-24',
+    category: 'saas',
+    tags: ['cloud', 'devops', 'saas', 'ci-cd', 'aws'],
+    featured: false,
+    content: `# Cloud and DevOps When Your SaaS Outgrows One Server
+
+**A product that can only be deployed by one person is not in production. It is on a machine that happens to be reachable.**
+
+Early SaaS often lives on a single VM, a managed database, and a deploy script in someone's head. That can be the right starting point. It stops being right when traffic, hiring, or compliance makes that person a single point of failure.
+
+[Cloud and DevOps](/solutions/cloud-devops) is the work of making deploys, recovery, and scale into habits instead of emergencies.
+
+## The symptoms are operational, not fashionable
+
+You do not need Kubernetes because a conference talk said so. You need a better operating layer when you see:
+
+- Deploys happen after hours because they scare people
+- Staging does not match production, so bugs are "environment issues"
+- Nobody has restored a backup this year
+- Scaling means SSHing in and hoping
+- Secrets live in a chat history or a laptop
+
+Those are product risks. They show up as downtime, slow features, and engineers who refuse to touch release day.
+
+## What to add, in order
+
+Skip the tools that do not match your stage. Add them when the previous layer is boring.
+
+### A repeatable deploy
+
+Every commit that should ship goes through the same pipeline. Tests run. The artifact that passed is what production gets. Humans approve when the risk is high; they do not assemble the release by hand.
+
+GitHub Actions (or the equivalent on your host) is enough for most teams. The pipeline is the practice. The brand of CI is not.
+
+### Environments that tell the truth
+
+You need a staging environment that runs the same image, the same migrations, and the same configuration shape as production. Preview apps for pull requests are useful. A shared "dev" database that everyone writes to is not.
+
+### Infrastructure you can rebuild
+
+If the account disappeared tomorrow, could you recreate it from a repository? Terraform (or similar) is how you stop snowflake servers. Until the infrastructure is in code, every incident is also a documentation incident.
+
+### Observability before extra scale
+
+Logs, metrics, and traces on the request path you care about. Uptime checks from outside the VPC. Alerts that page a human for customer-visible failure, not for disk at 70% on a box nobody uses.
+
+Scaling a mystery is how you get a more expensive mystery.
+
+### Containers, then orchestration
+
+Docker is how you make "it works on my machine" into an artifact. Kubernetes is how you run many of those artifacts with policy. Plenty of products should stop at a managed container service on AWS or Google Cloud. Moving to Kubernetes because it sounds senior is a good way to spend a quarter on YAML.
+
+## Security is part of the same layer
+
+TLS, least-privilege roles, secret storage, and dependency updates belong next to CI. They are not a later "hardening project." A SaaS that stores customer data and cannot rotate a key is not ready for the next enterprise contract.
+
+## How this shows up in product work
+
+DevOps that is disconnected from the application team fails. The people who change the schema need to own the migration in the pipeline. The people who add a feature need to add the check that proves it still works after deploy.
+
+That is why we treat cloud architecture, Docker, CI/CD, and Terraform as part of shipping, not as a separate vendor. See [Cloud and DevOps](/solutions/cloud-devops) for the stack we already operate.
+
+If deploys are the scariest part of your week, [describe how you ship today](/contact). We will map the next operating layer you actually need — usually smaller than a platform rewrite, and more concrete than a "move to the cloud" slide.`
+  },
+  {
+    id: 21,
+    title: 'One Product, Web and Mobile — Without Building Twice',
+    slug: 'one-product-web-and-mobile-shared-api',
+    excerpt: 'Web and mobile fail when they become two products with two truths. Share the API, the auth, and the domain rules — and be honest about which UI should be native.',
+    metaDescription: 'How to ship web and mobile as one product: a shared API, shared authentication, and a clear choice among React, React Native, Flutter, and native. Avoid duplicate business logic.',
+    keywords: 'web and mobile development, shared API, React Native, Flutter, React, iOS Android, product surfaces',
+    readingTime: '8 min read',
+    featuredImage: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=1200&h=630&fit=crop',
+    author: 'Pranay Reddy Aleti',
+    authorRole: 'Founder & Lead Developer',
+    publishDate: '2026-08-07',
+    lastUpdated: '2026-08-07',
+    category: 'web-development',
+    tags: ['web-development', 'mobile', 'react-native', 'api', 'product'],
+    featured: false,
+    content: `# One Product, Web and Mobile — Without Building Twice
+
+**Customers do not care that you have two codebases. They care that the price, the status, and the account match on every screen.**
+
+Teams usually split web and mobile too early or too late. Too early, and you fund two products before you have one. Too late, and you wrap a desktop site in a webview and call it an app.
+
+The durable approach is a single product with multiple surfaces. The domain lives in one API. Each surface is only as native as the interaction requires.
+
+## What must be shared
+
+If these are duplicated, you will spend the next year reconciling them:
+
+- Authentication and session rules
+- Permissions and roles
+- Prices, inventory, and "what state is this record in?"
+- Notifications that mean the same event
+
+That work belongs in a shared backend — for us, typically Node.js or Python behind React on the web. Mobile clients call the same contracts. They do not get a private copy of the business rules "just for the app."
+
+## What should not be shared
+
+UI kits, navigation patterns, and platform conventions. A hamburger menu that made sense on desktop is a poor phone experience. Push notifications are not emails with a badge.
+
+Forcing one UI codebase onto every device is how you get an app that looks portable and feels unfinished.
+
+## Choosing a mobile approach without a religious war
+
+### Responsive web first
+
+If the mobile job is the same as the desktop job (read, submit, approve), a well-built responsive React app may be the whole product. Ship it. Measure where people drop off. Do not open an App Store account to feel serious.
+
+### React Native
+
+Use it when you want native navigation, camera, or offline behavior and your web team already thinks in React. You still need native skill for store review, performance, and the last 10% of device APIs.
+
+### Flutter
+
+Use it when the app is a primary surface, you want one UI toolkit across iOS and Android, and you are willing to staff that skill. It is not a shortcut around product design.
+
+### Native iOS and Android
+
+Use it when the interaction is the product (real-time media, heavy offline, platform-specific hardware) or when store expectations demand it. Budget for two client teams plus the shared API.
+
+None of these choices replace the API. They only change how expensive the clients are.
+
+## Store submission is part of the build
+
+An app that cannot be submitted is not done. Signing, privacy nutrition labels, review notes, crash reporting, and a release train belong in the same plan as the first screen. Treat [App Store deployment](/solutions/web-mobile) as a capability, not a Friday surprise.
+
+## A sequence that keeps you honest
+
+- Launch the web product with a real API and auth
+- Add the mobile surface that has a distinct job, not a copy of every page
+- Keep feature flags and contracts versioned so a slow store review does not freeze the web
+- Delete duplicate logic whenever you find it
+
+That is the [web and mobile](/solutions/web-mobile) lane we sell: React, React Native, Flutter, or native clients on a shared backend — one product, the surfaces people actually use.
+
+If you are about to fund a second codebase, [send the jobs each surface must do](/contact). We will tell you which of those jobs can stay on the web, and which ones earn a native client.`
+  },
+  {
+    id: 22,
+    title: 'How to Add AI to a Product Without Shipping a Demo',
+    slug: 'how-to-add-ai-to-product-without-shipping-a-demo',
+    excerpt: 'A chatbot on a marketing page is not an AI product. Production AI has a job, a retrieval path, evaluation, and a fallback when the model is wrong.',
+    metaDescription: 'How to ship production AI in an existing product: pick a job, ground it in your data, evaluate quality, and handle failure. LLM features and automation without a slide-deck prototype.',
+    keywords: 'production AI, LLM product features, GenAI implementation, business process automation, RAG, AI engineering',
+    readingTime: '9 min read',
+    featuredImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&h=630&fit=crop',
+    author: 'Pranay Reddy Aleti',
+    authorRole: 'Founder & Lead Developer',
+    publishDate: '2026-08-21',
+    lastUpdated: '2026-08-21',
+    category: 'automation',
+    tags: ['ai', 'genai', 'llm', 'automation', 'production'],
+    featured: true,
+    content: `# How to Add AI to a Product Without Shipping a Demo
+
+**If you cannot say what happens when the model is wrong, you are not ready to put it in front of customers.**
+
+A surprising number of "AI initiatives" stop at a chat widget that answers from the public internet. That can be a useful prototype. It is not a product feature. It has no job, no source of truth, and no owner when it hallucinates a policy.
+
+[AI and GenAI](/solutions/ai) work that survives contact with users is narrower and more operational: one workflow, your data, a way to score quality, and a path that does not require a genius in the loop.
+
+## Start with a job, not a model
+
+Write the job in one sentence a support lead would recognize.
+
+- Draft a reply the agent edits, using this customer's orders
+- Extract fields from this PDF into the existing form
+- Classify this ticket so it routes without a human reading every line
+- Summarize this account before a call, from records we already store
+
+If the sentence contains "explore" or "platform," it is not a first feature. Models will keep changing. The job should not.
+
+## Ground the model in something you own
+
+Un-grounded generation is how you get confident nonsense. For most business software the right pattern is retrieval plus generation: fetch the records the user is allowed to see, then ask the model to work only with that context.
+
+That implies product work, not just an API key:
+
+- Auth so the model cannot see another tenant's data
+- A pipeline that keeps documents and database rows current
+- Logging of what was retrieved, not only what was said
+
+If you cannot retrieve the right paragraph, a larger model will not save you.
+
+## Evaluate like you mean it
+
+Demos hide variance. Production needs a small, boring eval set: 20-50 real examples with an accepted answer or an accepted action. Run it when you change the prompt, the model, or the retrieval.
+
+You are looking for:
+
+- Did it use the retrieved context
+- Did it refuse when context was missing
+- Did it stay inside the action you allow (draft vs send, suggest vs execute)
+
+Until those numbers exist, you are guessing. Guessing is fine in a spike. It is not fine in a billing or medical-adjacent workflow.
+
+## Design the failure
+
+Every AI feature needs a worse-but-safe path:
+
+- Show the draft and require a click to send
+- Fall back to the old form
+- Queue for a human when confidence is low
+- Rate-limit and degrade when the provider is down
+
+"The model will handle it" is not an incident plan.
+
+## Finish the half-built implementations
+
+A lot of teams already have tutorial code, a weekend prototype, or an AI-generated scaffold that never got auth, tests, or a deploy. Taking that to production is often cheaper than starting over — if you treat it as incomplete software, not as magic.
+
+That is explicit in how we work: LLM features, automation, NLP, data pipelines, and productionizing unfinished AI code. Details live on [AI and GenAI](/solutions/ai).
+
+## What not to do in the first release
+
+- A general assistant that "knows the company"
+- Write access to production without an approval step
+- Training a custom model before you have retrieval working
+- Promising accuracy you have not measured
+
+Pick one job. Put it behind the same login as the rest of the product. Measure it. Then expand.
+
+If you have a prototype that cannot be shown to a real customer yet, [tell us the job and the system it has to live in](/contact). We will say whether it is a few weeks from production or still a demo.`
+  },
+  {
+    id: 23,
+    title: 'Custom Software vs Off-the-Shelf: A Decision Guide for Growing Teams',
+    slug: 'custom-software-vs-off-the-shelf-decision-guide',
+    excerpt: 'Buy when the process is common. Build when the process is how you make money. Most teams need a mix — and a way to stop paying for both badly.',
+    metaDescription: 'A practical guide to choosing custom software versus off-the-shelf tools. When to buy, when to build, when to integrate, and how small businesses waste money doing both poorly.',
+    keywords: 'custom software vs off-the-shelf, buy vs build, small business software, SaaS vs custom app, software integration',
+    readingTime: '8 min read',
+    featuredImage: 'https://images.unsplash.com/photo-1553877522-2328e16f5d23?w=1200&h=600&fit=crop',
+    socialImage: 'https://images.unsplash.com/photo-1553877522-2328e16f5d23?w=1200&h=630&fit=crop',
+    author: 'Pranay Reddy Aleti',
+    authorRole: 'Founder & Lead Developer',
+    publishDate: '2026-08-28',
+    lastUpdated: '2026-08-28',
+    category: 'small-business-tech',
+    tags: ['small-business', 'custom-software', 'saas', 'buy-vs-build', 'automation'],
+    featured: false,
+    content: `# Custom Software vs Off-the-Shelf: A Decision Guide for Growing Teams
+
+**If the workflow is how you win customers, do not trap it in a tool you cannot change. If the workflow is accounting, do not write it yourself.**
+
+Growing teams waste money in two symmetric ways. They buy five SaaS products and stitch them with spreadsheets. Or they commission a custom system for a problem a vendor already solved well. Both feel like progress. Both age badly.
+
+This is a decision guide, not a pitch for custom everything. Ondosoft builds custom web apps and SaaS products — and we will tell you when you should not.
+
+## Buy when the problem is shared
+
+Off-the-shelf is the default for:
+
+- Payroll, bookkeeping, email, and calendar
+- Commodity CRM if your sales process is standard
+- Payments, if you can live inside a provider's rules
+- IT basics (identity, devices, backups)
+
+You are buying a maintained product, a security program, and a roadmap you do not have to staff. The cost of custom here is not the first invoice. It is owning tax rules and bank integrations forever.
+
+## Build when the problem is the business
+
+Custom software is justified when:
+
+- The process is the product (how you quote, schedule, fulfill, or underwrite)
+- Off-the-shelf would force you to drop a step customers pay you for
+- You are entering the same data in two systems that will never sync cleanly
+- The vendor's "enterprise" tier costs more than a focused app, with less fit
+
+A shop that wins on same-day custom orders is not a generic inventory user. A B2B SaaS that sells a workflow no competitor has is not a spreadsheet with a login.
+
+## The hybrid most teams actually need
+
+The grown-up answer is usually: buy the commodity layers, build the wedge, integrate on purpose.
+
+Examples that hold up:
+
+- Stripe or a similar processor for money movement; your app for the quote and the entitlement
+- A real identity provider; your app for the domain objects
+- An off-the-shelf help desk; your app for the account context the agent needs
+
+Integration is a product. If nobody owns the contract between systems, you will hire a person to be the integration.
+
+## A one-page test
+
+Score each candidate workflow:
+
+- Is this how we make or keep revenue?
+- How often do the rules change?
+- What happens if the vendor sunsets the feature?
+- Can a competent operator complete the job in the generic tool without a side spreadsheet?
+
+If you need a side spreadsheet, you are already paying for a shadow system. That is often the cheapest place to start a custom slice: replace the spreadsheet, leave the commodity tool alone.
+
+## What custom should look like at this size
+
+Not an "all-in-one platform." A [product engineering](/solutions/product-engineering) slice: one workflow, a proper login, data you can export, and a weekly demo until it is in use.
+
+If the pain is repetitive operations, automation belongs in that slice — see how we talk about [operations automation](/blogs/how-small-businesses-can-automate-operations-with-custom-apps) — not as a separate science project.
+
+## How we help you choose
+
+We are a US-based product team in Lehi, Utah. We will argue against a build when a vendor is enough. We will argue for a build when you are already paying a tax in hours and errors.
+
+If you are stuck between another SaaS seat and a custom app, [describe the workflow and the spreadsheet that holds it together](/contact). The right next step is usually smaller than a platform, and more durable than another monthly tool.`
   }
 ];
 

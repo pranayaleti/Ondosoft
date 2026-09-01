@@ -103,12 +103,14 @@ export default defineConfig({
         ]
       },
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        // HTML is rewritten after this step by prerender-routes.mjs.
+        // Precaching the Vite shell would serve pages without JSON-LD.
+        globPatterns: ['**/*.{js,css,ico,png,svg,woff,woff2}'],
         globIgnores: ['**/logo.backup*'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        globPatterns: ['**/*.{js,css,ico,png,svg,woff,woff2}'],
         globIgnores: ['**/logo.backup*'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: 'index.html',

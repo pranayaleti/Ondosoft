@@ -99,6 +99,7 @@ const Navbar = () => {
     const routeMap = {
       '/': () => import('../pages/HomePage'),
       '/solutions': () => import('../pages/SolutionsIndexPage'),
+      '/products': () => import('../pages/ProductsPage'),
       '/solutions/ai': () => import('../pages/SolutionPage'),
       '/industries': () => import('../pages/IndustriesPage'),
       '/case-studies': () => import('../pages/CaseStudiesPage'),

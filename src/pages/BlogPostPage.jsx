@@ -6,11 +6,22 @@ import ShareButtons from '../components/ShareButtons';
 import { companyInfo, getCanonicalUrl } from '../constants/companyInfo';
 import { formatDateUserTimezone } from '../utils/dateFormat.js';
 import { sanitizeHtml } from '../utils/security.js';
+import { loadPublicBlogPost } from '../utils/blogStore';
 
 // Lazy load heavy components
 const CalendlyModal = lazy(() => import('../components/CalendlyModal'));
 const Footer = lazy(() => import('../components/Footer'));
 import { Calendar, Clock, ArrowLeft, User } from 'lucide-react';
+
+function formatInlineMarkdown(text) {
+  const withLinks = text.replace(
+    /\[([^\]]+)\]\(([^)\s]+)\)/g,
+    '<a href="$2" class="text-orange-400 underline decoration-orange-500/40 hover:text-orange-300">$1</a>',
+  );
+  return sanitizeHtml(
+    withLinks.replace(/\*\*(.*?)\*\*/g, '<span class="text-orange-400 font-semibold">$1</span>'),
+  );
+}
 
 const BlogPostPage = () => {
   const { slug } = useParams();
@@ -38,24 +49,13 @@ const BlogPostPage = () => {
 
     let cancelled = false;
 
-    import('../data/blogData')
-      .then((module) => {
+    loadPublicBlogPost(currentSlug)
+      .then((data) => {
         if (cancelled || slugRef.current !== currentSlug) return;
-        const foundPost = module.getPostBySlug(currentSlug);
-        setBlogData({
-          getPostBySlug: module.getPostBySlug,
-          getRelatedPosts: module.getRelatedPosts,
-          blogCategories: module.blogCategories,
-        });
-        setPost(foundPost);
-        if (foundPost) {
-          setRelatedPosts(module.getRelatedPosts(foundPost, 3));
-          const foundCategory = module.blogCategories.find((cat) => cat.id === foundPost.category);
-          setCategoryName(foundCategory?.name || null);
-        } else {
-          setRelatedPosts([]);
-          setCategoryName(null);
-        }
+        setBlogData({ blogCategories: data.blogCategories });
+        setPost(data.post);
+        setRelatedPosts(data.relatedPosts || []);
+        setCategoryName(data.categoryName);
         setPostLoading(false);
       })
       .catch(() => {
@@ -181,7 +181,7 @@ const BlogPostPage = () => {
         elements.push(
           <ul key={`list-${listKey++}`} className="space-y-3 mb-6 ml-6 list-disc list-outside text-gray-200">
             {currentList.map((item, idx) => (
-              <li key={idx} className="leading-relaxed pl-2">{item}</li>
+              <li key={idx} className="leading-relaxed pl-2" dangerouslySetInnerHTML={{ __html: item }} />
             ))}
           </ul>
         );
@@ -195,22 +195,19 @@ const BlogPostPage = () => {
       // Handle headings - use h2 for main content headings (h1 is reserved for page title)
       if (trimmed.startsWith('# ')) {
         flushList();
-        const text = trimmed.substring(2);
-        const highlightedText = sanitizeHtml(text.replace(/\*\*(.*?)\*\*/g, '<span class="text-orange-400 font-semibold">$1</span>'));
+        const highlightedText = formatInlineMarkdown(trimmed.substring(2));
         elements.push(
           <h2 key={index} className="text-3xl font-bold text-white mt-12 mb-6 pt-8 border-t border-gray-700/50 first:mt-0 first:pt-0 first:border-t-0" dangerouslySetInnerHTML={{ __html: highlightedText }} />
         );
       } else if (trimmed.startsWith('## ')) {
         flushList();
-        const text = trimmed.substring(3);
-        const highlightedText = sanitizeHtml(text.replace(/\*\*(.*?)\*\*/g, '<span class="text-orange-400 font-semibold">$1</span>'));
+        const highlightedText = formatInlineMarkdown(trimmed.substring(3));
         elements.push(
           <h2 key={index} className="text-2xl font-bold text-white mt-10 mb-5 pt-6 border-t border-gray-700/30" dangerouslySetInnerHTML={{ __html: highlightedText }} />
         );
       } else if (trimmed.startsWith('### ')) {
         flushList();
-        const text = trimmed.substring(4);
-        const highlightedText = sanitizeHtml(text.replace(/\*\*(.*?)\*\*/g, '<span class="text-orange-400 font-semibold">$1</span>'));
+        const highlightedText = formatInlineMarkdown(trimmed.substring(4));
         elements.push(
           <h3 key={index} className="text-xl font-semibold text-white mt-8 mb-4" dangerouslySetInnerHTML={{ __html: highlightedText }} />
         );
@@ -218,15 +215,14 @@ const BlogPostPage = () => {
       // Handle sub-headings (like "Key Principle:", "Implementation:")
       else if (trimmed.match(/^[A-Z][a-z\s]+:/) && trimmed.endsWith(':')) {
         flushList();
-        const text = sanitizeHtml(trimmed.replace(/\*\*(.*?)\*\*/g, '<span class="text-orange-400 font-semibold">$1</span>'));
+        const text = formatInlineMarkdown(trimmed);
         elements.push(
           <h4 key={index} className="text-lg font-semibold text-orange-400 mt-6 mb-3" dangerouslySetInnerHTML={{ __html: text }} />
         );
       }
       // Handle list items
       else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-        const itemText = sanitizeHtml(trimmed.substring(2).replace(/\*\*(.*?)\*\*/g, '<span class="text-orange-400 font-semibold">$1</span>'));
-        currentList.push(itemText);
+        currentList.push(formatInlineMarkdown(trimmed.substring(2)));
       }
       // Handle bold paragraphs (standalone)
       else if (trimmed.startsWith('**') && trimmed.endsWith('**') && trimmed.length > 4) {
@@ -245,7 +241,7 @@ const BlogPostPage = () => {
       // Handle regular paragraphs
       else {
         flushList();
-        const highlightedParagraph = sanitizeHtml(trimmed.replace(/\*\*(.*?)\*\*/g, '<span class="text-orange-400 font-semibold">$1</span>'));
+        const highlightedParagraph = formatInlineMarkdown(trimmed);
         elements.push(
           <p key={index} className="text-gray-300 leading-relaxed mb-5 text-base" dangerouslySetInnerHTML={{ __html: highlightedParagraph }} />
         );

@@ -5,13 +5,15 @@ import {
   validateFormData,
   validationRules,
   rateLimiter,
-  generateCSRFToken,
   formatPhoneNumber,
   isValidPhone,
 } from "../utils/security.js";
 import { companyInfo } from "../constants/companyInfo";
 import { API_URL } from "../utils/apiConfig.js";
 import HoneypotField from "./HoneypotField";
+import CaptchaField from "./CaptchaField";
+import { postPublicForm } from "../utils/csrfClient.js";
+import { requireCaptchaToken } from "../utils/captchaClient.js";
 import { readAssessment } from "../utils/contactIntent.js";
 
 const PROJECT_TYPES = [
@@ -41,15 +43,12 @@ const Contact = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
-  const [csrfToken, setCsrfToken] = useState("");
 
   // Track mount so async work never calls setState on an unmounted component.
   const isMountedRef = useRef(true);
   const abortRef = useRef(null);
 
   useEffect(() => {
-    setCsrfToken(generateCSRFToken());
-
     const urlParams = new URLSearchParams(window.location.search);
     const packageParam = urlParams.get("package");
     const priceParam = urlParams.get("price");
@@ -184,15 +183,10 @@ const Contact = () => {
         payload.message = `Project type: ${projectLabel}\n\n${payload.message}`;
       }
 
-      const res = await fetch(`${API_URL}/consultation/submit`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-Token": csrfToken,
-        },
-        body: JSON.stringify(payload),
+      const captchaToken = await requireCaptchaToken('contact');
+      const res = await postPublicForm(`${API_URL}/consultation/submit`, payload, {
         signal: controller.signal,
+        captchaToken,
       });
 
       const data = await res.json().catch(() => ({}));
@@ -271,12 +265,14 @@ const Contact = () => {
         noValidate
         className="relative max-w-4xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-5"
       >
-        <input type="hidden" name="csrf" value={csrfToken} readOnly />
         <HoneypotField
           id="contact-website"
           value={formData.website}
           onChange={handleInputChange}
         />
+        <div className="md:col-span-2">
+          <CaptchaField />
+        </div>
 
         <div>
           <label htmlFor="contact-name" className="block text-sm font-medium text-neutral-200 mb-2">

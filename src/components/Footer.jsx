@@ -49,6 +49,9 @@ const Footer = ({ hideFeedbackCta = false }) => {
               <Link to="/solutions" className="hover:underline">Solutions</Link>
             </li>
             <li>
+              <Link to="/products" className="hover:underline">Products</Link>
+            </li>
+            <li>
               <Link to="/industries" className="hover:underline">Industries</Link>
             </li>
             <li>
@@ -62,6 +65,12 @@ const Footer = ({ hideFeedbackCta = false }) => {
             </li>
             <li>
               <Link to="/services" className="hover:underline">Services</Link>
+            </li>
+            <li>
+              <Link to="/services/utah" className="hover:underline">Utah (HQ)</Link>
+            </li>
+            <li>
+              <Link to="/sitemap#service-areas" className="hover:underline">Service areas</Link>
             </li>
             <li>
               <Link to="/portfolio" className="hover:underline">Portfolio</Link>

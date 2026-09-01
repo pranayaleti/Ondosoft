@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import SEOHead from '../components/SEOHead';
 import BlogCard from '../components/BlogCard';
 import { companyInfo, getCanonicalUrl } from '../constants/companyInfo';
+import { loadPublicBlogIndex } from '../utils/blogStore';
 
 // Lazy load heavy components
 const CalendlyModal = lazy(() => import('../components/CalendlyModal'));
@@ -16,19 +17,17 @@ const BlogPage = () => {
   const [blogData, setBlogData] = useState(null);
   const [blogLoadError, setBlogLoadError] = useState(false);
 
-  // Lazy load blogData
   useEffect(() => {
+    let cancelled = false;
     setBlogLoadError(false);
-    import('../data/blogData').then(module => {
-      setBlogData({
-        blogPosts: module.blogPosts,
-        blogCategories: module.blogCategories,
-        getFeaturedPosts: module.getFeaturedPosts,
-        getRecentPosts: module.getRecentPosts
-      });
+    loadPublicBlogIndex().then((data) => {
+      if (!cancelled) setBlogData(data);
     }).catch(() => {
-      setBlogLoadError(true);
+      if (!cancelled) setBlogLoadError(true);
     });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const featuredPosts = useMemo(() => {

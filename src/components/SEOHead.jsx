@@ -1,13 +1,11 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { companyInfo } from '../constants/companyInfo';
+import { buildPageSchema, ensurePageJsonLd } from '../utils/staticJsonLd';
 
-// The global <SchemaMarkup /> in App.jsx emits Organization / Website /
-// LocalBusiness / Service. Per-page schema passed here (via `structuredData`)
-// should only add page-specific graphs (FAQPage, Article/BlogPosting,
-// BreadcrumbList, ContactPage, etc.). We no longer emit a default global
-// graph from SEOHead to avoid conflicting Organization/Service duplicates.
+// Page JSON-LD is written to <head> in useLayoutEffect, not via Helmet.
+// Helmet strips prerendered application/ld+json tags during hydrate.
 
 const SEOHead = ({
   title = 'Ondosoft | Product Engineering Teams to Build, Scale, and Modernize',
@@ -31,6 +29,9 @@ const SEOHead = ({
 
   const googleVerification = import.meta.env.VITE_GOOGLE_SITE_VERIFICATION;
   const bingVerification = import.meta.env.VITE_BING_SITE_VERIFICATION;
+  useLayoutEffect(() => {
+    ensurePageJsonLd(pathname, structuredData || buildPageSchema(pathname));
+  }, [pathname, structuredData, title]);
 
   return (
     <Helmet>
@@ -97,14 +98,6 @@ const SEOHead = ({
       <link rel="shortcut icon" type="image/png" href="/logo.png" />
       <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
 
-      {/* Page-specific structured data (FAQ, Article, Breadcrumb, etc.) */}
-      {structuredData && (
-        <script
-          type="application/ld+json"
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-        />
-      )}
     </Helmet>
   );
 };

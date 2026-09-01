@@ -7,7 +7,10 @@ export const CSP_CONFIG = {
     "'self'",
     "'unsafe-inline'", // Required for React
     "https://www.googletagmanager.com",
-    "https://www.google-analytics.com"
+    "https://www.google-analytics.com",
+    "https://challenges.cloudflare.com",
+    "https://www.google.com",
+    "https://www.gstatic.com"
   ],
   'style-src': [
     "'self'",
@@ -27,9 +30,12 @@ export const CSP_CONFIG = {
   'connect-src': [
     "'self'",
     "https://www.google-analytics.com",
-    "https://analytics.google.com"
+    "https://analytics.google.com",
+    "https://challenges.cloudflare.com",
+    "https://www.google.com",
+    "https://www.gstatic.com"
   ],
-  'frame-src': ["'none'"],
+  'frame-src': ["'self'", "https://challenges.cloudflare.com", "https://www.google.com"],
   'object-src': ["'none'"],
   'base-uri': ["'self'"],
   'form-action': ["'self'"]

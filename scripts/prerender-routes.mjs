@@ -13,11 +13,15 @@ import { dirname, resolve, join } from 'node:path';
 import { mkdirSync, writeFileSync, readFileSync, existsSync, copyFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { build } from 'esbuild';
+import { fetchPublishedCmsPosts, mergeBlogPosts } from './loadPublishedBlogs.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, '..');
 const distDir = resolve(rootDir, 'dist');
 const blogEntry = resolve(rootDir, 'src/data/blogData.js');
+const geoEntry = resolve(rootDir, 'src/data/geoPages.js');
+const productsEntry = resolve(rootDir, 'src/data/productsCatalog.js');
+const jsonLdEntry = resolve(rootDir, 'src/utils/staticJsonLd.js');
 
 const SITE = 'https://ondosoft.com';
 const OG_IMAGE = `${SITE}/og-image.png`;
@@ -97,6 +101,11 @@ const ROUTES = [
     path: '/services',
     title: 'Software Development Services | Ondosoft',
     description: 'Custom software delivery from a US-based product team. We build and scale web apps, SaaS platforms, mobile experiences, and cloud infrastructure with clear roadmaps and reliable support.',
+  },
+  {
+    path: '/products',
+    title: 'What Ondosoft Offers | Product Catalog',
+    description: 'A catalog of Ondosoft offerings that already exist on this site: product engineering, dedicated teams, AI, modernization, cloud, web and mobile, services, and the capabilities deck.',
   },
   {
     path: '/pricing',
@@ -187,7 +196,7 @@ const escapeHtml = (value) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
-const replaceMeta = (html, { path, title, description, ogImage, ogType }) => {
+const replaceMeta = (html, { path, title, description, ogImage, ogType, jsonLd }) => {
   const canonical = path === '/' ? `${SITE}/` : `${SITE}${path}`;
   const safeTitle = escapeHtml(title);
   const safeDesc = escapeHtml(description);
@@ -220,6 +229,11 @@ const replaceMeta = (html, { path, title, description, ogImage, ogType }) => {
   setOrInsert(/<meta name="twitter:description" content="[^"]*"\s*\/?>/, `<meta name="twitter:description" content="${safeDesc}" />`);
   setOrInsert(/<meta name="twitter:image" content="[^"]*"\s*\/?>/, `<meta name="twitter:image" content="${safeImage}" />`);
 
+  if (jsonLd) {
+    next = next.replace(/<script type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/g, '');
+    next = next.replace('</head>', `    ${jsonLd}\n  </head>`);
+  }
+
   return next;
 };
 
@@ -234,29 +248,29 @@ const writeRoute = (html, route) => {
   writeFileSync(join(dir, 'index.html'), outHtml, 'utf8');
 };
 
-const loadBlogPosts = async () => {
-  const assetStubPlugin = {
-    name: 'asset-stub',
-    setup(buildApi) {
-      buildApi.onResolve({ filter: /\.(jpg|jpeg|png|gif|svg|webp|avif|webm|mp4|css)$/i }, (args) => ({
-        path: args.path,
-        namespace: 'asset-stub',
-      }));
-      buildApi.onLoad({ filter: /.*/, namespace: 'asset-stub' }, (args) => {
-        const filename = args.path.split('/').pop();
-        return {
-          contents: `export default ${JSON.stringify(`/assets/${filename}`)};`,
-          loader: 'js',
-        };
-      });
-    },
-  };
+const assetStubPlugin = {
+  name: 'asset-stub',
+  setup(buildApi) {
+    buildApi.onResolve({ filter: /\.(jpg|jpeg|png|gif|svg|webp|avif|webm|mp4|css)$/i }, (args) => ({
+      path: args.path,
+      namespace: 'asset-stub',
+    }));
+    buildApi.onLoad({ filter: /.*/, namespace: 'asset-stub' }, (args) => {
+      const filename = args.path.split('/').pop();
+      return {
+        contents: `export default ${JSON.stringify(`/assets/${filename}`)};`,
+        loader: 'js',
+      };
+    });
+  },
+};
 
+const bundleAndImport = async (entry, outfileName) => {
   const tmpDir = mkdtempSync(resolve(tmpdir(), 'ondo-prerender-'));
-  const bundlePath = resolve(tmpDir, 'blog-bundle.mjs');
+  const bundlePath = resolve(tmpDir, outfileName);
   try {
     await build({
-      entryPoints: [blogEntry],
+      entryPoints: [entry],
       bundle: true,
       format: 'esm',
       platform: 'node',
@@ -265,11 +279,28 @@ const loadBlogPosts = async () => {
       plugins: [assetStubPlugin],
       logLevel: 'error',
     });
-    const mod = await import(pathToFileURL(bundlePath).href);
-    return mod.blogPosts || [];
+    return await import(pathToFileURL(bundlePath).href);
   } finally {
     rmSync(tmpDir, { recursive: true, force: true });
   }
+};
+
+const loadBlogPosts = async () => {
+  const mod = await bundleAndImport(blogEntry, 'blog-bundle.mjs');
+  return mod.blogPosts || [];
+};
+
+const loadJsonLdHelpers = async () => bundleAndImport(jsonLdEntry, 'ld-bundle.mjs');
+
+const attachJsonLd = (route, helpers, extra = {}) => {
+  if (!helpers) return route;
+  const globalGraph = helpers.buildGlobalSchema();
+  const pageGraph = helpers.buildPageSchema(route.path, extra);
+  const globalTag = `<script type="application/ld+json" id="${helpers.PRERENDER_GLOBAL_ID}">${helpers.serializeJsonLd(globalGraph)}</script>`;
+  const pageTag = pageGraph
+    ? `<script type="application/ld+json" id="${helpers.PRERENDER_PAGE_ID}" data-path="${escapeHtml(route.path)}">${helpers.serializeJsonLd(pageGraph)}</script>`
+    : '';
+  return { ...route, jsonLd: `${globalTag}\n    ${pageTag}`.trim() };
 };
 
 if (!existsSync(distDir)) {
@@ -279,15 +310,51 @@ if (!existsSync(distDir)) {
 
 const template = readFileSync(join(distDir, 'index.html'), 'utf8');
 
+let jsonLdHelpers = null;
+try {
+  jsonLdHelpers = await loadJsonLdHelpers();
+} catch (error) {
+  console.warn('prerender-routes: JSON-LD helpers skipped:', error.message);
+}
+
 for (const route of ROUTES) {
-  writeRoute(template, route);
+  writeRoute(template, attachJsonLd(route, jsonLdHelpers));
+}
+
+let geoCount = 0;
+try {
+  const geoMod = await import(pathToFileURL(geoEntry).href);
+  const geoRoutes = geoMod.getGeoPrerenderRoutes() || [];
+  for (const route of geoRoutes) {
+    writeRoute(template, attachJsonLd(route, jsonLdHelpers));
+  }
+  geoCount = geoRoutes.length;
+} catch (error) {
+  console.warn('prerender-routes: geo pages skipped:', error.message);
+}
+
+let productCount = 0;
+try {
+  const productMod = await bundleAndImport(productsEntry, 'products-bundle.mjs');
+  const productRoutes = (productMod.getProductPrerenderRoutes() || []).filter((route) => route.path !== '/products');
+  for (const route of productRoutes) {
+    writeRoute(template, attachJsonLd(route, jsonLdHelpers));
+  }
+  productCount = productRoutes.length;
+} catch (error) {
+  console.warn('prerender-routes: product pages skipped:', error.message);
 }
 
 try {
-  const posts = await loadBlogPosts();
+  const staticPosts = await loadBlogPosts();
+  const { posts: cmsPosts, source: cmsSource, warning: cmsWarning } = await fetchPublishedCmsPosts();
+  if (cmsWarning && cmsPosts.length === 0) {
+    console.warn(`prerender-routes: ${cmsWarning}`);
+  }
+  const posts = mergeBlogPosts(staticPosts, cmsPosts);
   for (const post of posts) {
     if (!post?.slug) continue;
-    writeRoute(template, {
+    writeRoute(template, attachJsonLd({
       path: `/blogs/${post.slug}`,
       title: `${post.title} | Ondosoft Blogs`,
       description: post.metaDescription || post.excerpt || post.title,
@@ -295,19 +362,23 @@ try {
       ogImage: typeof post.socialImage === 'string' && post.socialImage.startsWith('http')
         ? post.socialImage
         : undefined,
-    });
+    }, jsonLdHelpers, { blogPost: post }));
   }
-  console.log(`Prerendered ${ROUTES.length} marketing routes and ${posts.length} blog posts.`);
+  const cmsNote = cmsPosts.length
+    ? ` (${staticPosts.length} static + ${cmsPosts.length} CMS via ${cmsSource || 'unknown'})`
+    : '';
+  console.log(`Prerendered ${ROUTES.length} marketing routes, ${geoCount} geo pages, ${productCount} product pages, and ${posts.length} blog posts${cmsNote}.`);
 } catch (error) {
   console.warn('prerender-routes: blog posts skipped:', error.message);
-  console.log(`Prerendered ${ROUTES.length} marketing routes.`);
+  console.log(`Prerendered ${ROUTES.length} marketing routes, ${geoCount} geo pages, and ${productCount} product pages.`);
 }
 
 const homeHtml = readFileSync(join(distDir, 'index.html'), 'utf8');
 let notFoundHtml = homeHtml
   .replace(/<title>[\s\S]*?<\/title>/, '<title>404 - Page Not Found | Ondosoft</title>')
   .replace(/<link rel="canonical"[^>]*>/, '')
-  .replace(/<meta name="robots"[^>]*>/g, '');
+  .replace(/<meta name="robots"[^>]*>/g, '')
+  .replace(/<script type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/g, '');
 notFoundHtml = notFoundHtml.replace(
   '</title>',
   '</title>\n    <meta name="robots" content="noindex, nofollow, noarchive" />'

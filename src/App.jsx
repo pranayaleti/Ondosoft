@@ -27,6 +27,9 @@ import StickyMobileCTA from "./components/product/StickyMobileCTA";
 const HomePage = lazy(() => import("./pages/HomePage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ServicesPage = lazy(() => import("./pages/ServicesPage"));
+const GeoServicePage = lazy(() => import("./pages/GeoServicePage"));
+const ProductsPage = lazy(() => import("./pages/ProductsPage"));
+const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage"));
 const SolutionsIndexPage = lazy(() => import("./pages/SolutionsIndexPage"));
 const SolutionPage = lazy(() => import("./pages/SolutionPage"));
 const CaseStudiesPage = lazy(() => import("./pages/CaseStudiesPage"));
@@ -75,10 +78,12 @@ const AdminNotificationsPage = lazy(() => import("./pages/admin/NotificationsPag
 const ConsultationLeadsPage = lazy(() => import("./pages/admin/ConsultationLeadsPage"));
 const AIConversationsPage = lazy(() => import("./pages/admin/AIConversationsPage"));
 const EmailTemplatesPage = lazy(() => import("./pages/admin/EmailTemplatesPage"));
+const AdminBlogsPage = lazy(() => import("./pages/admin/AdminBlogsPage"));
+const AdminBlogEditorPage = lazy(() => import("./pages/admin/AdminBlogEditorPage"));
 
 // Scroll to top component for route changes
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   const prevPathnameRef = useRef(pathname);
 
   useEffect(() => {
@@ -88,11 +93,28 @@ const ScrollToTop = () => {
       prevPathnameRef.current = pathname;
     }
 
-    const rafId = requestAnimationFrame(() => {
+    const scrollToHashOrTop = () => {
+      if (hash) {
+        const target = document.getElementById(hash.slice(1));
+        if (target) {
+          target.scrollIntoView({ behavior: 'auto', block: 'start' });
+          return true;
+        }
+        return false;
+      }
       window.scrollTo({ top: 0, behavior: 'auto' });
-    });
-    return () => cancelAnimationFrame(rafId);
-  }, [pathname]);
+      return true;
+    };
+
+    const rafId = requestAnimationFrame(scrollToHashOrTop);
+    const retryId = hash
+      ? setTimeout(scrollToHashOrTop, 200)
+      : null;
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (retryId) clearTimeout(retryId);
+    };
+  }, [pathname, hash]);
 
   return null;
 };
@@ -190,6 +212,9 @@ const AppRoutes = () => {
                 <Route path="/industries" element={<IndustriesPage />} />
                 <Route path="/insights" element={<InsightsPage />} />
                 <Route path="/services" element={<ServicesPage />} />
+                <Route path="/services/:slug" element={<GeoServicePage />} />
+                <Route path="/products" element={<ProductsPage />} />
+                <Route path="/products/:slug" element={<ProductDetailPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/testimonials" element={<TestimonialsPage />} />
                 <Route path="/portfolio" element={<PortfolioPage />} />
@@ -253,6 +278,8 @@ const AppRoutes = () => {
                   <Route path="consultation-leads" element={<ConsultationLeadsPage />} />
                   <Route path="ai-conversations" element={<AIConversationsPage />} />
                   <Route path="email-templates" element={<EmailTemplatesPage />} />
+                  <Route path="blogs" element={<AdminBlogsPage />} />
+                  <Route path="blogs/:id" element={<AdminBlogEditorPage />} />
                 </Route>
 
                 <Route path="*" element={<NotFoundPage />} />

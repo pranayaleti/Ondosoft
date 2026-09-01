@@ -1,120 +1,16 @@
-import { companyInfo, getPostalAddressSchema, getContactPointSchema, getOpeningHoursSchema } from '../constants/companyInfo';
+import { useLayoutEffect } from 'react';
+import { ensureGlobalJsonLd } from '../utils/staticJsonLd';
 
-// Lightweight, accurate JSON-LD injected on every page
+// Global Organization / WebSite / LocalBusiness / Service graph.
+// Prerender writes the same graph on #ondo-ld-global. We never emit a
+// <script> during render (React would put it in #root and duplicate it).
+// After paint, ensureGlobalJsonLd keeps the head tag and strips body copies.
 const SchemaMarkup = () => {
-  const openingHours = getOpeningHoursSchema() || [];
+  useLayoutEffect(() => {
+    ensureGlobalJsonLd();
+  }, []);
 
-  const schema = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        "@id": `${companyInfo.urls.website}/#organization`,
-        "name": companyInfo.name,
-        "url": companyInfo.urls.website,
-        "logo": `${companyInfo.urls.website}/logo.png`,
-        "description": "Ondosoft is a US-based product team building custom software, AI-enabled products, and scalable platforms.",
-        "foundingDate": companyInfo.foundingDate,
-        "contactPoint": [
-          getContactPointSchema("customer service"),
-          { ...getContactPointSchema("sales"), email: companyInfo.salesEmail }
-        ],
-        "address": getPostalAddressSchema(),
-        "sameAs": [
-          companyInfo.urls.linkedin,
-          companyInfo.urls.github
-        ]
-      },
-      {
-        "@type": "WebSite",
-        "@id": `${companyInfo.urls.website}/#website`,
-        "url": companyInfo.urls.website,
-        "name": companyInfo.name,
-        "description": "Full stack software development, AI products, and platform engineering for modern teams.",
-        "publisher": {
-          "@id": `${companyInfo.urls.website}/#organization`
-        }
-      },
-      {
-        "@type": "Service",
-        "@id": `${companyInfo.urls.website}/#services`,
-        "name": "Software Development Services",
-        "description": "Full-stack web, mobile, AI, and cloud development delivered by a senior product team.",
-        "provider": {
-          "@id": `${companyInfo.urls.website}/#organization`
-        },
-        "serviceType": "Software Development",
-        "areaServed": {
-          "@type": "Country",
-          "name": companyInfo.location.country
-        },
-        "hasOfferCatalog": {
-          "@type": "OfferCatalog",
-          "name": "Core Services",
-          "itemListElement": [
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Service",
-                "name": "Custom Web Applications",
-                "description": "Modern web apps with React, Node.js, and scalable cloud infrastructure."
-              }
-            },
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Service",
-                "name": "SaaS & Platform Builds",
-                "description": "End-to-end product development, including architecture, billing, and observability."
-              }
-            },
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Service",
-                "name": "Mobile & Cross-Platform",
-                "description": "iOS, Android, and cross-platform apps that integrate with your stack."
-              }
-            }
-          ]
-        }
-      },
-      {
-        "@type": "LocalBusiness",
-        "@id": `${companyInfo.urls.website}/#localbusiness`,
-        "name": `${companyInfo.name} Software Development`,
-        "description": "US-based software development studio delivering secure, scalable products.",
-        "url": companyInfo.urls.website,
-        "image": `${companyInfo.urls.website}/logo.png`,
-        "telephone": companyInfo.phoneE164,
-        "email": companyInfo.email,
-        "address": getPostalAddressSchema(),
-        "priceRange": "$$",
-        ...(openingHours.length ? { "openingHours": openingHours } : {}),
-        "geo": {
-          "@type": "GeoCoordinates",
-          "latitude": companyInfo.coordinates.latitude,
-          "longitude": companyInfo.coordinates.longitude
-        },
-        "areaServed": {
-          "@type": "Country",
-          "name": companyInfo.location.country
-        }
-        // AggregateRating intentionally omitted here: the rich-snippet policies
-        // require individually resolvable Review entities, which we do not
-        // currently expose. Add back only when linkable reviews exist.
-      }
-    ]
-  };
-
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(schema)
-      }}
-    />
-  );
+  return null;
 };
 
 export default SchemaMarkup;

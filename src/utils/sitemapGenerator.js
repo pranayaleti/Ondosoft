@@ -1,5 +1,6 @@
 import { blogPosts } from '../data/blogData';
 import { companyInfo } from '../constants/companyInfo';
+import { getGeoSitemapEntries } from '../data/geoPages';
 
 const today = new Date().toISOString().split('T')[0];
 
@@ -22,6 +23,15 @@ export const generateSitemap = () => {
     { url: '/industries', priority: '0.8', changefreq: 'monthly', lastmod: today },
     { url: '/insights', priority: '0.8', changefreq: 'weekly', lastmod: today },
     { url: '/services', priority: '0.8', changefreq: 'weekly', lastmod: today },
+    { url: '/products', priority: '0.8', changefreq: 'weekly', lastmod: today },
+    { url: '/products/product-engineering', priority: '0.7', changefreq: 'monthly', lastmod: today },
+    { url: '/products/dedicated-teams', priority: '0.7', changefreq: 'monthly', lastmod: today },
+    { url: '/products/ai', priority: '0.7', changefreq: 'monthly', lastmod: today },
+    { url: '/products/legacy-modernization', priority: '0.7', changefreq: 'monthly', lastmod: today },
+    { url: '/products/cloud-devops', priority: '0.7', changefreq: 'monthly', lastmod: today },
+    { url: '/products/web-mobile', priority: '0.7', changefreq: 'monthly', lastmod: today },
+    { url: '/products/software-development-services', priority: '0.7', changefreq: 'monthly', lastmod: today },
+    { url: '/products/capabilities-deck', priority: '0.6', changefreq: 'monthly', lastmod: today },
     { url: '/pricing', priority: '0.8', changefreq: 'monthly', lastmod: today },
     { url: '/testimonials', priority: '0.6', changefreq: 'monthly', lastmod: today },
     { url: '/portfolio', priority: '0.8', changefreq: 'monthly', lastmod: today },
@@ -37,7 +47,8 @@ export const generateSitemap = () => {
     { url: '/licensing', priority: '0.5', changefreq: 'yearly', lastmod: today },
     { url: '/accessibility', priority: '0.5', changefreq: 'yearly', lastmod: today },
     { url: '/capabilities-deck', priority: '0.6', changefreq: 'monthly', lastmod: today },
-    { url: '/sitemap', priority: '0.4', changefreq: 'monthly', lastmod: today }
+    { url: '/sitemap', priority: '0.4', changefreq: 'monthly', lastmod: today },
+    ...getGeoSitemapEntries(today),
   ];
 
   let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -62,7 +73,11 @@ export const generateSitemap = () => {
   return sitemap;
 };
 
-export const generateBlogSitemap = () => {
+export function getStaticBlogPosts() {
+  return blogPosts;
+}
+
+export const generateBlogSitemap = (posts = blogPosts) => {
   const baseUrl = companyInfo.urls.website;
 
   let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -78,7 +93,7 @@ export const generateBlogSitemap = () => {
     <priority>0.8</priority>
   </url>`;
 
-  blogPosts.forEach(post => {
+  posts.forEach(post => {
     const lastmod = post.lastUpdated || post.publishDate || today;
     const publishDate = post.publishDate || today;
 
@@ -150,9 +165,9 @@ Sitemap: ${baseUrl}/sitemap.xml
 Sitemap: ${baseUrl}/sitemap-blogs.xml`;
 };
 
-export const generateAndSaveSitemap = () => {
+export const generateAndSaveSitemap = (blogPostsOverride) => {
   const sitemap = generateSitemap();
-  const blogSitemap = generateBlogSitemap();
+  const blogSitemap = generateBlogSitemap(blogPostsOverride);
   const robotsTxt = generateRobotsTxt();
 
   return {

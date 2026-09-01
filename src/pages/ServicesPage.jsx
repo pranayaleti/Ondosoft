@@ -1,8 +1,10 @@
 import { useState, lazy, Suspense } from "react";
+import { Link } from "react-router-dom";
 import SEOHead from "../components/SEOHead";
 import ServiceSchema from "../components/ServiceSchema";
 import HeroCTA from "../components/HeroCTA";
 import { companyInfo } from "../constants/companyInfo";
+import { getFeaturedCities, getFeaturedStates, getGeoPath, getPlaceLabel } from "../data/geoPages";
 
 // Lazy load heavy components
 const Services = lazy(() => import("../components/Services"));
@@ -120,6 +122,49 @@ const ServicesPage = () => {
           </div>
         </div>
         
+        <section className="px-4 py-16 border-t border-gray-700/50">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+              Where we work
+            </h2>
+            <p className="text-gray-400 max-w-3xl mb-8">
+              Ondosoft is based in Lehi, Utah, and partners remotely with teams in the markets below. These are real pages for locations we already name — not a page for every US city.
+            </p>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-3">States</h3>
+                <ul className="flex flex-wrap gap-2">
+                  {getFeaturedStates().map((state) => (
+                    <li key={state.slug}>
+                      <Link
+                        to={getGeoPath(state)}
+                        className="inline-block px-3 py-1.5 rounded-md border border-gray-700 text-sm text-orange-400 hover:border-orange-500/50 hover:text-orange-300"
+                      >
+                        {state.name}{state.isHq ? ' (HQ)' : ''}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-3">Cities</h3>
+                <ul className="flex flex-wrap gap-2">
+                  {getFeaturedCities().map((city) => (
+                    <li key={city.slug}>
+                      <Link
+                        to={getGeoPath(city)}
+                        className="inline-block px-3 py-1.5 rounded-md border border-gray-700 text-sm text-orange-400 hover:border-orange-500/50 hover:text-orange-300"
+                      >
+                        {getPlaceLabel(city)}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Hero CTA Section */}
         <HeroCTA onOpenSchedule={() => setIsModalOpen(true)} />
         

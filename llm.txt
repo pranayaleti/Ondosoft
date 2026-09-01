@@ -14,7 +14,7 @@ OndoSoft is a professional business website and client portal: marketing site, b
 - **AI chat**: UnifiedChatWidget, AIChatPrompt, AIChatModal. Session-based; API: GET/POST `/api/ai-chat/conversations`, POST messages (returns `assistantReply` when AI keys set)/feedback/end. Backend: `backend/services/aiService.js` (OpenAI or Anthropic when OPENAI_API_KEY or ANTHROPIC_API_KEY set), `backend/constants/companyContext.js` for system prompt. Data in ai_conversations, ai_messages. Admin: AIConversationsPage, `/api/admin/ai-conversations`. Without API keys, frontend uses rule-based responses.
 - **Analytics**: Frontend `src/utils/analytics.js` – session, page views, clicks, navigation, scroll, form, visibility, errors; batch to `POST /api/analytics/track`. Backend tables: analytics_events, analytics_clicks, analytics_navigation, analytics_page_views, analytics_scrolls, analytics_form_interactions, analytics_user_interactions.
 - **Performance**: PerformanceMonitor, ScriptOptimizer, initPerformanceOptimizations (preload, lazy scripts), requestIdleCallback for analytics/prefetch, OptimizedImage, Vite manualChunks (admin, portal, auth, vendor-react, vendor-other).
-- **Security**: `src/utils/security.js` – CSP, sanitizeInput, validateFormData, rateLimiter, generateCSRFToken; used by Contact and auth.
+- **Security**: `src/utils/security.js` – CSP, sanitizeInput, validateFormData, rateLimiter. Public forms use signed CSRF (`GET /api/csrf-token`, `backend/csrf.js`) plus optional Turnstile/reCAPTCHA when `TURNSTILE_*` or `RECAPTCHA_*` / `VITE_*_SITE_KEY` env vars are set.
 - **Caching**: `src/utils/apiCache.js` – in-memory API cache with TTL and request deduplication.
 
 ## Repo layout
@@ -23,7 +23,7 @@ OndoSoft is a professional business website and client portal: marketing site, b
 - `src/` – React app: `main.jsx`, `App.jsx`, `index.css`, `components/`, `pages/`, `contexts/`, `utils/`, `constants/`, `data/`, `styles/`
 - `src/pages/` – Route components: `HomePage`, `AboutPage`, `ServicesPage`, `PricingPage`, `BlogPage`, `BlogPostPage`, `ContactPage`, `FAQPage`, legal (`PrivacyPolicyPage`, `TermsOfUsePage`, `LegalPage`, `NDAPage`, `LicensingPage`), `AccessibilityPage`, `CapabilitiesDeckPage`, sitemap/robots, auth (`SignInPage`, `SignUpPage`, `ForgotPasswordPage`, `ResetPasswordPage`), `portal/` (dashboard), `admin/`
 - `src/pages/portal/` – Client dashboard: `PortalLayout`, `PortalDashboard`, `SubscriptionsPage`, `CampaignsPage`, `AssetsPage`, `InvoicesPage`, `TicketsPage`, `NotificationsPage`
-- `src/pages/admin/` – Admin UI: `AdminLayout`, `AdminDashboard`, `AnalyticsPage`, `ClientsPage`, `CampaignsPage`, `AssetsPage`, `TicketsPage`, `InvoicesPage`, `NotificationsPage`, `ConsultationLeadsPage`, `AIConversationsPage`, `EmailTemplatesPage`
+- `src/pages/admin/` – Admin UI: `AdminLayout`, `AdminDashboard`, `AnalyticsPage`, `ClientsPage`, `CampaignsPage`, `AssetsPage`, `TicketsPage`, `InvoicesPage`, `NotificationsPage`, `ConsultationLeadsPage`, `AIConversationsPage`, `EmailTemplatesPage`, `AdminBlogsPage`, `AdminBlogEditorPage`
 - `src/components/` – Shared UI: `Navbar`, `Footer`, `BaseLayout`, `SEOHead`, `HiddenSEOSection`, `SchemaMarkup`, `UnifiedChatWidget`, `AIChatWidget`, `ProtectedRoute`, `ErrorBoundary`, `PerformanceMonitor`, `ScriptOptimizer`, etc.
 - `src/contexts/AuthContext.jsx` – Auth state; uses `src/utils/auth.js` (signin/signup/signout/session via backend).
 - `src/constants/companyInfo.js` – Company name, contact, address, hours, URLs, schema helpers; used by SEO and schema markup.
@@ -31,13 +31,14 @@ OndoSoft is a professional business website and client portal: marketing site, b
 - `backend/` – Express app: `index.js`, `supabaseClient.js`, `seed.js`, `.env.example`, `render.yaml`
 - `public/` – `robots.txt`, `sitemap.xml`, `manifest.json`, `sw.js`, `logo.png`
 - `.github/workflows/deploy-pages.yml` – Build frontend, upload `dist`, deploy to GitHub Pages; uses `VITE_API_URL` secret
+- `scripts/prerender-routes.mjs` + `scripts/generate-sitemap.mjs` – After Vite build, emit per-route HTML and sitemaps. Published CMS `blog_posts` are merged in (CMS slug wins) via `scripts/loadPublishedBlogs.mjs` (`DATABASE_URL` or `PRERENDER_BLOGS_API` / `VITE_API_URL`). If neither is available the build keeps static `blogData.js` posts and logs a warning.
 
 ## Routing (App.jsx)
 
-- Public: `/`, `/services`, `/pricing`, `/testimonials`, `/portfolio`, `/blogs`, `/blogs/:slug`, `/contact`, `/about`, `/faq`, `/legal`, `/privacy-policy`, `/terms-of-use`, `/nda`, `/licensing`, `/accessibility`, `/capabilities-deck`, `/sitemap`, `/sitemap.xml`, `/robots.txt`
+- Public: `/`, `/services`, `/services/:slug` (featured geo pages — HQ + TOP_CITIES and their states), `/products`, `/products/:slug` (catalog of existing offerings), `/pricing`, `/testimonials`, `/portfolio`, `/blogs`, `/blogs/:slug`, `/contact`, `/about`, `/faq`, `/legal`, `/privacy-policy`, `/terms-of-use`, `/nda`, `/licensing`, `/accessibility`, `/capabilities-deck`, `/sitemap`, `/sitemap.xml`, `/robots.txt`
 - Auth: `/auth/signup`, `/auth/signin`, `/auth/forgot-password`, `/reset-password`
 - Dashboard: `/dashboard` (PortalLayout) – index, subscriptions, campaigns, assets, invoices, tickets, notifications
-- Admin: `/admin` (AdminLayout, requireAdmin) – dashboard, analytics, clients, campaigns, assets, tickets, invoices, notifications, consultation-leads, ai-conversations, email-templates
+- Admin: `/admin` (AdminLayout, requireAdmin) – dashboard, analytics, clients, campaigns, assets, tickets, invoices, notifications, consultation-leads, ai-conversations, email-templates, blogs
 - All pages lazy-loaded; chunks: admin, portal, auth, vendor-react, vendor-other
 
 ## API (backend/index.js)
@@ -49,7 +50,8 @@ Base path `/api`. Auth: JWT in cookie or Authorization header; `authenticateToke
 - Dashboard (authenticated): `/api/dashboard/dashboard`, `/api/dashboard/subscriptions`, `/api/dashboard/campaigns`, `/api/dashboard/assets`, `/api/dashboard/invoices`, `/api/dashboard/invoices/:id/pdf`, `/api/dashboard/tickets`, `/api/dashboard/notifications`
 - Admin: `/api/admin/dashboard`, `/api/admin/users`, `/api/admin/consultation-leads`, `/api/admin/feedback`, `/api/admin/ai-conversations`, `/api/admin/email-templates`, `/api/admin/analytics`, `/api/admin/tickets`, `/api/admin/invoices`, `/api/admin/assets`, `/api/admin/notifications`, etc.
 - Shared: `GET/POST /api/email-templates` (authenticated)
-- Public: `POST /api/analytics/track`, `POST /api/consultation/submit`, `POST /api/pricing/interaction`, `POST /api/feedback`, `GET/POST /api/ai-chat/conversations`, etc.
+- Public: `GET /api/csrf-token`, `POST /api/consultation/submit` (CSRF + optional captcha), `POST /api/newsletter/subscribe`, `POST /api/feedback/ideas`, `POST /api/feedback`, `GET /api/blogs`, `GET /api/blogs/:slug`, `POST /api/analytics/track`, `POST /api/pricing/interaction`, `GET/POST /api/ai-chat/conversations`, etc.
+- Admin blogs: `GET/POST /api/admin/blogs`, `GET/PUT/DELETE /api/admin/blogs/:id`
 
 ## Environment
 

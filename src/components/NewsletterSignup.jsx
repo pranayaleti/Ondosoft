@@ -3,6 +3,9 @@ import { Send, AlertCircle, CheckCircle2 } from "lucide-react";
 import { API_URL } from "../utils/apiConfig.js";
 import { rateLimiter, isValidEmail } from "../utils/security.js";
 import HoneypotField from "./HoneypotField";
+import CaptchaField from "./CaptchaField";
+import { postPublicForm } from "../utils/csrfClient.js";
+import { requireCaptchaToken } from "../utils/captchaClient.js";
 
 const NewsletterSignup = () => {
   const [email, setEmail] = useState("");
@@ -50,12 +53,11 @@ const NewsletterSignup = () => {
     abortRef.current = controller;
 
     try {
-      const res = await fetch(`${API_URL}/newsletter/subscribe`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmed, website }),
-        signal: controller.signal,
-      });
+      const captchaToken = await requireCaptchaToken('newsletter');
+      const res = await postPublicForm(`${API_URL}/newsletter/subscribe`, {
+        email: trimmed,
+        website,
+      }, { signal: controller.signal, captchaToken });
       const data = await res.json().catch(() => ({}));
 
       if (!isMountedRef.current) return;
@@ -160,6 +162,9 @@ const NewsletterSignup = () => {
                   )}
                 </button>
               </form>
+              <div className="mt-4 flex justify-center">
+                <CaptchaField />
+              </div>
               {status === "error" && (
                 <div
                   data-testid="newsletter-error"
